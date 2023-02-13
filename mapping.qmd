@@ -1,0 +1,22 @@
+---
+title: "mapping"
+format: html
+editor: visual
+---
+
+```{r}
+library(terra)
+library(sf)
+library(raster)
+library(here)
+library(janitor)
+library(tidyverse)
+library(tmap)
+```
+
+```{r}
+shapes <- read_sf(here("egrid2020_subregions", "eGRID2020_subregions.shp"))
+
+tm_shape(shapes) +
+  tm_polygons()
+```

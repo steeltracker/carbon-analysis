@@ -1,0 +1,65 @@
+---
+title: "state_emissions_per_plant"
+format: html
+editor: visual
+---
+
+```{r}
+library(here)
+library(janitor)
+library(tidyverse)
+```
+
+```{r}
+egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
+  clean_names()
+```
+
+```{r}
+state_emissions <- egrid2021_data %>% 
+  mutate(co2e = state_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh
+         , state = state.name[match(state_abbreviation, state.abb)]) %>% 
+  select(c(state, co2e))
+
+state_emissions <- state_emissions[-1,]
+```
+
+```{r}
+gem_data <- readxl::read_excel(here("data", "Global-Steel-Plant-Tracker-March-2022.xlsx"), sheet = "Steel Plants") %>% 
+  clean_names()
+```
+
+```{r}
+plant_capacity_data_processing <- gem_data %>% 
+  mutate(plant_name = plant_name_english
+         , state = subnational_unit_province_state
+         , bof_capacity = nominal_bof_steel_capacity_ttpa
+         , eaf_capacity = nominal_eaf_steel_capacity_ttpa) %>% 
+  filter(country == "United States"
+         , status == "operating"
+         , eaf_capacity != "N/A") %>% 
+  select(plant_name
+         , owner
+         , coordinates
+         , country
+         , state
+         , status
+         , start_year
+         , plant_age_years
+         , eaf_capacity
+         , bof_capacity)
+```
+
+```{r}
+plant_capacity <- plant_capacity_data_processing %>% 
+  select(-c(country
+         , owner
+         , start_year
+         , plant_age_years
+         , status)) %>% 
+  separate(coordinates, c("lat", "lon"), remove = TRUE, ",")
+```
+
+```{r}
+plant_emissions_state <- left_join(plant_capacity, state_emissions, by = "state")
+```
