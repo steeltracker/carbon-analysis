@@ -10,10 +10,14 @@ library(janitor)
 library(tidyverse)
 ```
 
+### Importing eGrid Data
+
 ```{r}
 egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
   clean_names()
 ```
+
+### Standardizing state names and cleaning up rows
 
 ```{r}
 state_emissions <- egrid2021_data %>% 
@@ -24,10 +28,14 @@ state_emissions <- egrid2021_data %>%
 state_emissions <- state_emissions[-1,]
 ```
 
+### Importing GEM data
+
 ```{r}
-gem_data <- readxl::read_excel(here("data", "Global-Steel-Plant-Tracker-March-2022.xlsx"), sheet = "Steel Plants") %>% 
+gem_data <- readxl::read_excel(here("data", "GEM_2021_data.xlsx"), sheet = "Steel Plants") %>% 
   clean_names()
 ```
+
+### Filtering to only look at plants and data that we are interested in
 
 ```{r}
 plant_capacity_data_processing <- gem_data %>% 
@@ -50,6 +58,8 @@ plant_capacity_data_processing <- gem_data %>%
          , bof_capacity)
 ```
 
+### Only selecting columns we need for now
+
 ```{r}
 plant_capacity <- plant_capacity_data_processing %>% 
   select(-c(country
@@ -60,6 +70,59 @@ plant_capacity <- plant_capacity_data_processing %>%
   separate(coordinates, c("lat", "lon"), remove = TRUE, ",")
 ```
 
+### Merging data
+
 ```{r}
 plant_emissions_state <- left_join(plant_capacity, state_emissions, by = "state")
 ```
+
+### Importing AISI data
+
+```{r}
+AISI_regions_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
+  clean_names()
+
+AISI_data_readin <- readxl::read_excel(here("data", "AISI_data.xlsx"), sheet = "AISI Production Values") %>% 
+  clean_names()
+```
+
+NE = Northeast
+
+GL = Great Lakes
+
+MW = Midwest
+
+S = southern
+
+W = western
+
+```{r}
+AISI_regions <- AISI_regions_readin %>% 
+  filter(steel_plant_in_gspt == "yes")
+
+AISI_data <- AISI_data_readin %>% 
+  mutate(week_end_date = week_end_date_1
+         , NE_util = north_east_region_capacity_utilization
+         , GL_util = great_lakes_region_capacity_utilization
+         , MW_util = midwest_region_capacity_utilization
+         , S_util = southern_region_capacity_utilization
+         , W_util = western_region_capacity_utilization) %>% 
+  select(week_end_date
+         , NE_util
+         , GL_util
+         , MW_util
+         , S_util
+         , W_util)
+
+AISI_data <- AISI_data[-1,]
+```
+
+### Merging All Data
+
+```{r}
+regional_plant_emissions <- left_join(plant_emissions_state, AISI_regions, by = "state") %>% 
+  select(-c(steel_plant_in_gspt
+            , state_abbreviation))
+```
+
+This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.
