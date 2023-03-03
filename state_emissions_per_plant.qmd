@@ -5,9 +5,14 @@ editor: visual
 ---
 
 ```{r}
+library(terra)
+library(sf)
+library(raster)
 library(here)
 library(janitor)
 library(tidyverse)
+library(tmap)
+library(rmapshaper)
 ```
 
 ### Importing eGrid Data
@@ -123,6 +128,37 @@ AISI_data <- AISI_data[-1,]
 regional_plant_emissions <- left_join(plant_emissions_state, AISI_regions, by = "state") %>% 
   select(-c(steel_plant_in_gspt
             , state_abbreviation))
+```
+
+```{r}
+## Reading in data
+shapes <- read_sf("~/Desktop/meds-courses/capstone-files/data/egrid2020_subregions/eGRID2020_subregions.shp") %>% 
+  clean_names() %>% 
+  filter(!zip_subregi %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS"))
+
+## Making our file easier to load and map
+simple_shapes <- ms_simplify(shapes, keep = 0.0005)
+
+## Bringing in our points
+plant_points <- st_geometry(st_as_sf(regional_plant_emissions, coords = c("lon", "lat"))) %>% 
+  st_set_crs("WGS84")
+
+## Plotting to make sure that we have overlaps
+# tm_shape(simple_shapes) +
+#   tm_polygons() +
+#   tm_shape(plant_points) +
+#   tm_dots()
+
+overlap <- st_within(plant_points, simple_shapes)
+
+vector <- c()
+regional_plant_emissions1 <- regional_plant_emissions
+for (i in seq_along(overlap)) {
+  vector[i] <- simple_shapes$zip_subregi[overlap[[i]]]
+}
+
+regional_plant_emissions1 <- regional_plant_emissions1 %>% 
+  mutate(subregions = vector)
 ```
 
 This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.

@@ -30,14 +30,14 @@ tm_shape(simple_shapes) +
   tm_shape(plant_points) +
   tm_dots()
 
-simpley_shapes <- st_as_sf(simple_shapes)
+overlap <- st_within(plant_points, simple_shapes)
 
-left_join(planty_points, simple_shapes, join = st_within)
-
-st_within(planty_points, simple_shapes)
-
+vector <- c()
 regional_plant_emissions1 <- regional_plant_emissions
-for (i in seq_along(test)) {
-   regional_plant_emissions1[ , (ncol(regional_plant_emissions1)+1)[i]] <- simple_shapes$zip_subregi[test[[i]]]
+for (i in seq_along(overlap)) {
+  vector[i] <- simple_shapes$zip_subregi[overlap[[i]]]
 }
+
+regional_plant_emissions1 <- regional_plant_emissions1 %>% 
+  mutate(subregions = vector)
 ```
