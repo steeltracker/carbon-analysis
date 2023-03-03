@@ -12,11 +12,32 @@ library(here)
 library(janitor)
 library(tidyverse)
 library(tmap)
+library(rmapshaper)
 ```
 
 ```{r}
-shapes <- read_sf(here("egrid2020_subregions", "eGRID2020_subregions.shp"))
+shapes <- read_sf("~/Desktop/meds-courses/capstone-files/data/egrid2020_subregions/eGRID2020_subregions.shp") %>% 
+  clean_names() %>% 
+  filter(!zip_subregi %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS"))
 
-tm_shape(shapes) +
-  tm_polygons()
+simple_shapes <- ms_simplify(shapes, keep = 0.0005)
+
+plant_points <- st_geometry(st_as_sf(regional_plant_emissions, coords = c("lon", "lat"))) %>% 
+  st_set_crs("WGS84")
+
+tm_shape(simple_shapes) +
+  tm_polygons() +
+  tm_shape(plant_points) +
+  tm_dots()
+
+simpley_shapes <- st_as_sf(simple_shapes)
+
+left_join(planty_points, simple_shapes, join = st_within)
+
+st_within(planty_points, simple_shapes)
+
+regional_plant_emissions1 <- regional_plant_emissions
+for (i in seq_along(test)) {
+   regional_plant_emissions1[ , (ncol(regional_plant_emissions1)+1)[i]] <- simple_shapes$zip_subregi[test[[i]]]
+}
 ```
