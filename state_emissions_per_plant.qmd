@@ -126,3 +126,12 @@ regional_plant_emissions <- left_join(plant_emissions_state, AISI_regions, by = 
 ```
 
 This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.
+
+## Download data for Tableau mock-up
+
+```{r}
+
+write_csv(regional_plant_emissions, "/Users/ericabishop/Documents/MEDSwinter/EDS240-datavis/capstone_data_tab/regional_plant_emissions.csv")
+
+
+```
