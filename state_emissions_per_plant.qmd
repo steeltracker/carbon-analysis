@@ -18,26 +18,40 @@ library(rmapshaper)
 ### Importing eGrid Data
 
 ```{r}
-egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
+# egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
+#   clean_names()
+
+egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "SRL21") %>%
   clean_names()
 ```
 
 ### Standardizing state names and cleaning up rows
 
 ```{r}
-state_emissions <- egrid2021_data %>% 
-  mutate(co2e = state_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh
-         , state = state.name[match(state_abbreviation, state.abb)]) %>% 
-  select(c(state, co2e))
+# state_emissions <- egrid2021_data %>% 
+#   mutate(co2e = state_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh
+#          , state = state.name[match(state_abbreviation, state.abb)]) %>% 
+#   select(c(state, co2e))
+# 
+# state_emissions <- state_emissions[-1,]
 
-state_emissions <- state_emissions[-1,]
+subregion_emissions <- egrid2021_data %>%
+  mutate(co2e_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
+         , subregion = e_grid_subregion_acronym
+         , subregion_name = e_grid_subregion_name) %>%
+  filter(!subregion %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS")) %>% 
+  select(c(subregion, subregion_name, co2e_per_mwh))
+
+subregion_emissions <- subregion_emissions[-1,]
 ```
 
 ### Importing GEM data
 
 ```{r}
 gem_data <- readxl::read_excel(here("data", "GEM_2021_data.xlsx"), sheet = "Steel Plants") %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(subnational_unit_province_state = case_when(subnational_unit_province_state == "Michican" ~ "Michigan"
+                                                     , TRUE ~ as.character(subnational_unit_province_state)))
 ```
 
 ### Filtering to only look at plants and data that we are interested in
@@ -46,8 +60,8 @@ gem_data <- readxl::read_excel(here("data", "GEM_2021_data.xlsx"), sheet = "Stee
 plant_capacity_data_processing <- gem_data %>% 
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
-         , bof_capacity = nominal_bof_steel_capacity_ttpa
-         , eaf_capacity = nominal_eaf_steel_capacity_ttpa) %>% 
+         , bof_capacity = as.numeric(nominal_bof_steel_capacity_ttpa)
+         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
   filter(country == "United States"
          , status == "operating"
          , eaf_capacity != "N/A") %>% 
@@ -60,7 +74,8 @@ plant_capacity_data_processing <- gem_data %>%
          , start_year
          , plant_age_years
          , eaf_capacity
-         , bof_capacity)
+         , bof_capacity
+         , municipality)
 ```
 
 ### Only selecting columns we need for now
@@ -75,10 +90,43 @@ plant_capacity <- plant_capacity_data_processing %>%
   separate(coordinates, c("lat", "lon"), remove = TRUE, ",")
 ```
 
+### Finding where plants are located in subregions
+
+```{r}
+## Reading in data
+shapes <- read_sf("~/Desktop/meds-courses/capstone-files/data/egrid2020_subregions/eGRID2020_subregions.shp") %>% 
+  clean_names() %>% 
+  filter(!zip_subregi %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS"))
+
+## Making our file easier to load and map
+simple_shapes <- ms_simplify(shapes, keep = 0.0005)
+
+## Bringing in our points
+plant_points <- st_geometry(st_as_sf(plant_capacity, coords = c("lon", "lat"))) %>% 
+  st_set_crs("WGS84")
+
+## Plotting to make sure that we have overlaps
+# tm_shape(simple_shapes) +
+#   tm_polygons() +
+#   tm_shape(plant_points) +
+#   tm_dots()
+
+overlap <- st_within(plant_points, simple_shapes)
+
+vector <- c()
+for (i in seq_along(overlap)) {
+  vector[i] <- simple_shapes$zip_subregi[overlap[[i]]]
+}
+
+plant_capacity1 <- plant_capacity
+plant_capacity1 <- plant_capacity1 %>% 
+  mutate(subregion = vector)
+```
+
 ### Merging data
 
 ```{r}
-plant_emissions_state <- left_join(plant_capacity, state_emissions, by = "state")
+plant_emissions_by_subregion <- left_join(plant_capacity1, subregion_emissions, by = "subregion")
 ```
 
 ### Importing AISI data
@@ -86,6 +134,9 @@ plant_emissions_state <- left_join(plant_capacity, state_emissions, by = "state"
 ```{r}
 AISI_regions_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
   clean_names()
+
+# AISI_city_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Region by City") %>% 
+#   clean_names()
 
 AISI_data_readin <- readxl::read_excel(here("data", "AISI_data.xlsx"), sheet = "AISI Production Values") %>% 
   clean_names()
@@ -97,9 +148,9 @@ GL = Great Lakes
 
 MW = Midwest
 
-S = southern
+S = Southern
 
-W = western
+W = Western
 
 ```{r}
 AISI_regions <- AISI_regions_readin %>% 
@@ -117,7 +168,8 @@ AISI_data <- AISI_data_readin %>%
          , GL_util
          , MW_util
          , S_util
-         , W_util)
+         , W_util) %>% 
+  filter(week_end_date < "2022-01-01") ## Missing January 2021 data
 
 AISI_data <- AISI_data[-1,]
 ```
@@ -125,40 +177,63 @@ AISI_data <- AISI_data[-1,]
 ### Merging All Data
 
 ```{r}
-regional_plant_emissions <- left_join(plant_emissions_state, AISI_regions, by = "state") %>% 
+regional_plant_emissions_by_state <- left_join(plant_emissions_by_subregion, AISI_regions, by = "state") %>% 
   select(-c(steel_plant_in_gspt
             , state_abbreviation))
+
+regional_plant_emissions <- regional_plant_emissions_by_state %>% 
+  mutate(region = case_when(municipality %in% c("Alton"
+                                                , "Sterling"
+                                                , "Peoria"
+                                                , "Granite City"
+                                                , "Mansfield"
+                                                , "Middletown") ~ "Midwest"
+                            , municipality %in% c("Riverdale"
+                                                  , "Chicago"
+                                                  , "Bourbonnais"
+                                                  , "Cuyahoga Heights"
+                                                  , "Cleveland"
+                                                  , "Toledo"
+                                                  , "Lorain") ~ "Great Lakes"
+                            , municipality %in% c("Mingo Junction"
+                                                  , "Youngstown"
+                                                  , "Canton") ~ "North East"
+                            , TRUE ~ as.character(region)))
 ```
 
+### Emissions Intensity
+
 ```{r}
-## Reading in data
-shapes <- read_sf("~/Desktop/meds-courses/capstone-files/data/egrid2020_subregions/eGRID2020_subregions.shp") %>% 
-  clean_names() %>% 
-  filter(!zip_subregi %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS"))
+## co2e_per_mwh is from egrid and is pounds of CO2e per MWH of electricty produced
+## Global Efficiency Intelligence states that it takes 1377 KWH to produce 1 tonne of steel. "Global Efficiency Intelligence: Industrial Electrification in U.S. States"
 
-## Making our file easier to load and map
-simple_shapes <- ms_simplify(shapes, keep = 0.0005)
+eaf_MWH_per_tonne <- 1377 / 1000
 
-## Bringing in our points
-plant_points <- st_geometry(st_as_sf(regional_plant_emissions, coords = c("lon", "lat"))) %>% 
-  st_set_crs("WGS84")
+## emissions_intensity is pounds of CO2e per tonne of steel
+## eap_capacity is in thousand tons per year and we are standardizing to tons per week
+regional_plant_emissions <- regional_plant_emissions %>% 
+  mutate(emissions_intensity = (co2e_per_mwh * eaf_MWH_per_tonne)
+         , weekly_eaf_capacity = ((eaf_capacity * 1000) / 52)
+         , weekly_full_capacity_intensity = case_when(region == "North East" ~ emissions_intensity * weekly_eaf_capacity
+                                           , region == "Great Lakes" ~ emissions_intensity *  weekly_eaf_capacity
+                                           , region == "Midwest" ~ emissions_intensity *  weekly_eaf_capacity
+                                           , region == "Southern" ~ emissions_intensity *  weekly_eaf_capacity
+                                           , region == "Western" ~ emissions_intensity * weekly_eaf_capacity
+                                           )
+         )
 
-## Plotting to make sure that we have overlaps
-# tm_shape(simple_shapes) +
-#   tm_polygons() +
-#   tm_shape(plant_points) +
-#   tm_dots()
+AISI_longer <- AISI_data %>% pivot_longer(cols = c(NE_util, GL_util, MW_util, S_util, W_util)
+                 , names_to = "region"
+                 , values_to = "utilization"
+                 ) %>% 
+  mutate(region = case_when(region == "NE_util" ~ "North East"
+                   , region == "GL_util" ~ "Great Lakes"
+                   , region == "MW_util" ~ "Midwest"
+                   , region == "S_util" ~ "Southern"
+                   , region == "W_util" ~ "Western"))
 
-overlap <- st_within(plant_points, simple_shapes)
-
-vector <- c()
-regional_plant_emissions1 <- regional_plant_emissions
-for (i in seq_along(overlap)) {
-  vector[i] <- simple_shapes$zip_subregi[overlap[[i]]]
-}
-
-regional_plant_emissions1 <- regional_plant_emissions1 %>% 
-  mutate(subregions = vector)
+plant_emissions <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>% 
+  mutate(weekly_co2e = weekly_full_capacity_intensity * utilization)
 ```
 
 This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.
