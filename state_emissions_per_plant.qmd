@@ -233,7 +233,10 @@ AISI_longer <- AISI_data %>% pivot_longer(cols = c(NE_util, GL_util, MW_util, S_
                    , region == "W_util" ~ "Western"))
 
 plant_emissions <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>% 
-  mutate(weekly_co2e = weekly_full_capacity_intensity * utilization)
+  mutate(weekly_co2e = weekly_full_capacity_intensity * utilization) 
+# %>% 
+#   pivot_wider(names_from = week_end_date
+#             , values_from = weekly_co2e)
 ```
 
 This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.
