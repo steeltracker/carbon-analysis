@@ -52,33 +52,29 @@ subregion_emissions <- subregion_emissions[-1,]
 ### Importing GEM data
 
 ```{r}
-gem_data <- readxl::read_excel(here("data", "GEM_2021_data.xlsx"), sheet = "Steel Plants") %>% 
-  clean_names() %>% 
-  mutate(subnational_unit_province_state = case_when(subnational_unit_province_state == "Michican" ~ "Michigan"
-                                                     , TRUE ~ as.character(subnational_unit_province_state)))
+gem_data <- readxl::read_excel(here("data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
+  clean_names()
 ```
 
 ### Filtering to only look at plants and data that we are interested in
 
 ```{r}
 plant_capacity_data_processing <- gem_data %>% 
-  mutate(plant_name = plant_name_english
-         , state = subnational_unit_province_state
-         , bof_capacity = as.numeric(nominal_bof_steel_capacity_ttpa)
-         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
   filter(country == "United States"
          , status == "operating"
-         , eaf_capacity != "N/A") %>% 
+         , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
+  mutate(plant_name = plant_name_english
+         , state = subnational_unit_province_state
+         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
   select(plant_name
          , owner
          , coordinates
          , country
          , state
          , status
-         , start_year
+         , start_date
          , plant_age_years
          , eaf_capacity
-         , bof_capacity
          , municipality)
 ```
 
@@ -88,7 +84,7 @@ plant_capacity_data_processing <- gem_data %>%
 plant_capacity <- plant_capacity_data_processing %>% 
   select(-c(country
          , owner
-         , start_year
+         , start_date
          , plant_age_years
          , status)) %>% 
   separate(coordinates, c("lat", "lon"), remove = TRUE, ",")
@@ -182,7 +178,7 @@ AISI_data <- AISI_data[-1,]
 ### Merging All Data
 
 ```{r}
-regional_plant_emissions_raw <- left_join(plant_emissions_by_subregion, AISI_regions, by = "state") %>% 
+regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions, by = "state") %>% 
   select(-c(steel_plant_in_gspt
             , state_abbreviation)) %>% 
   mutate(region = case_when(municipality %in% c("Alton"
@@ -207,33 +203,30 @@ regional_plant_emissions_raw <- left_join(plant_emissions_by_subregion, AISI_reg
 ### Emissions Intensity
 
 ```{r}
-## co2e_per_mwh is from egrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
+## co2e_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
 
 ## Global Efficiency Intelligence states that it takes 1377 KWH to produce 1 tonne of steel. "Global Efficiency Intelligence: Industrial Electrification in U.S. States"
-eaf_MWH_per_tonne <- 1377 / 1000
-
-## This a constant value per week
-## eaf_capacity is in thousand tons per year and we are standardizing to tons per week
-weekly_eaf_capacity_by_plant <- regional_plant_emissions_raw %>%
-  mutate(weekly_eaf_capacity = ((eaf_capacity * 1000) / 52)) %>% 
-  select(c(plant_name, weekly_eaf_capacity))
+## MWH per tonne of steel
+eaf_MWH_per_tonne <- 710 / 1000
 
 ## emissions_intensity is pounds of CO2e per tonne of steel (the amount of co2e produced for every tonne of steel produced)
 
-AISI_longer <- AISI_data %>% pivot_longer(cols = c(NE_util, GL_util, MW_util, S_util, W_util)
+AISI_longer <- AISI_data %>% 
+  pivot_longer(cols = c(NE_util, GL_util, MW_util, S_util, W_util)
                  , names_to = "region"
-                 , values_to = "utilization"
-                 ) %>% 
+                 , values_to = "utilization") %>% 
   mutate(region = case_when(region == "NE_util" ~ "North East"
                    , region == "GL_util" ~ "Great Lakes"
                    , region == "MW_util" ~ "Midwest"
                    , region == "S_util" ~ "Southern"
                    , region == "W_util" ~ "Western"))
 
+## eaf_capacity is in thousand tons per year and we are standardizing to tons per week
+## Converting to per thousand tons for weekly co2e
 plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity = (co2e_per_mwh * eaf_MWH_per_tonne)
          , weekly_eaf_capacity = ((eaf_capacity * 1000) / 52)
-         , weekly_co2e = weekly_full_capacity_intensity * utilization)
+         , weekly_co2e = (weekly_eaf_capacity * utilization * emissions_intensity) / 2204.62 ) ## Converting to metric tons
 
 plant_emissions_wide <- plant_emissions_long %>% 
   select(-utilization) %>% 
@@ -241,25 +234,6 @@ plant_emissions_wide <- plant_emissions_long %>%
            , values_from = weekly_co2e)
 ```
 
-This is where you need to pick up: We need to pivot longer the AISI_data in order to merge the capacity utilization by region. That way, we can multiply the utilization by the maximum capacity and then get how many tons of steel they are producing. You get that number that they produced for the week and multiply that by how much it takes to produce 1 ton of steel (the standard number that we have) and then that will give you the CO2e per plant per week based off of the regional utilization rates.
-
-## Download data for Tableau mock-up
-
 ```{r}
 
-write_csv(regional_plant_emissions, "/Users/ericabishop/Documents/MEDSwinter/EDS240-datavis/capstone_data_tab/regional_plant_emissions.csv")
-
-
-```
-
-
-
-
-```{r}
-weekly_full_capacity_intensity = case_when(region == "North East" ~ emissions_intensity * weekly_eaf_capacity
-                                           , region == "Great Lakes" ~ emissions_intensity *  weekly_eaf_capacity
-                                           , region == "Midwest" ~ emissions_intensity *  weekly_eaf_capacity
-                                           , region == "Southern" ~ emissions_intensity *  weekly_eaf_capacity
-                                           , region == "Western" ~ emissions_intensity * weekly_eaf_capacity
-                                           )
 ```
