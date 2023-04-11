@@ -6,7 +6,7 @@ editor: visual
 
 ### Loading Libraries
 
-```{r}
+```{r, message=FALSE}
 library(terra)
 library(sf)
 library(raster)
@@ -40,11 +40,11 @@ egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet 
 # state_emissions <- state_emissions[-1,]
 
 subregion_emissions <- egrid2021_data %>%
-  mutate(co2e_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
+  mutate(co2e_lb_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
          , subregion_name = e_grid_subregion_name) %>%
   filter(!subregion %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS")) %>% 
-  select(c(subregion, subregion_name, co2e_per_mwh))
+  select(c(subregion, subregion_name, co2e_lb_per_mwh))
 
 subregion_emissions <- subregion_emissions[-1,]
 ```
@@ -106,10 +106,10 @@ plant_points <- st_geometry(st_as_sf(plant_capacity, coords = c("lon", "lat"))) 
   st_set_crs("WGS84")
 
 ## Plotting to make sure that we have overlaps
-# tm_shape(simple_shapes) +
-#   tm_polygons() +
-#   tm_shape(plant_points) +
-#   tm_dots()
+tm_shape(subregion_shapes) +
+  tm_polygons() +
+  tm_shape(plant_points) +
+  tm_dots()
 
 overlap <- st_within(plant_points, subregion_shapes)
 
@@ -132,7 +132,7 @@ plant_emissions_by_subregion <- left_join(plant_capacity, subregion_emissions, b
 
 ### Importing AISI data
 
-```{r}
+```{r, message=FALSE}
 AISI_regions_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
   clean_names()
 
@@ -203,9 +203,9 @@ regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions
 ### Emissions Intensity
 
 ```{r}
-## co2e_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
+## co2e_lb_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
 
-## Global Efficiency Intelligence states that it takes 1377 KWH to produce 1 tonne of steel. "Global Efficiency Intelligence: Industrial Electrification in U.S. States"
+## Global Efficiency Intelligence states that it takes 710 KWH to produce 1 tonne of steel. "Global Efficiency Intelligence: Industrial Electrification in U.S. States"
 ## MWH per tonne of steel
 eaf_MWH_per_tonne <- 710 / 1000
 
@@ -221,19 +221,20 @@ AISI_longer <- AISI_data %>%
                    , region == "S_util" ~ "Southern"
                    , region == "W_util" ~ "Western"))
 
-## eaf_capacity is in thousand tons per year and we are standardizing to tons per week
+## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes per week
 ## Converting to per thousand tons for weekly co2e
 plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
-  mutate(emissions_intensity = (co2e_per_mwh * eaf_MWH_per_tonne)
-         , weekly_eaf_capacity = ((eaf_capacity * 1000) / 52)
-         , weekly_co2e = (weekly_eaf_capacity * utilization * emissions_intensity) / 2204.62 ) ## Converting to metric tons
+  mutate(emissions_intensity_co2e_lb_per_tonne = (co2e_lb_per_mwh * eaf_MWH_per_tonne)
+         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 52)
+         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_lb_per_tonne) / 2204.62262185) %>% 
+  mutate_if(is.numeric, round, 2)
 
 plant_emissions_wide <- plant_emissions_long %>% 
   select(-utilization) %>% 
   pivot_wider(names_from = week_end_date
-           , values_from = weekly_co2e)
+           , values_from = scope2_co2e_tonnes_per_week)
 ```
 
 ```{r}
-
+write_csv(plant_emissions_wide, file = here("scope_2_steel_plant_emissions.csv"))
 ```
