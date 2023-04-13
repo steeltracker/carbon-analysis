@@ -65,7 +65,9 @@ plant_capacity_data_processing <- gem_data %>%
          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
-         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
+         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
+         , address = tolower(gsub(",.*", "", location_address))
+         , address = gsub("[.].*", "", address)) %>% 
   select(plant_name
          , owner
          , coordinates
@@ -75,7 +77,8 @@ plant_capacity_data_processing <- gem_data %>%
          , start_date
          , plant_age_years
          , eaf_capacity
-         , municipality)
+         , municipality
+         , address)
 ```
 
 ### Only selecting columns we need for now
@@ -106,10 +109,10 @@ plant_points <- st_geometry(st_as_sf(plant_capacity, coords = c("lon", "lat"))) 
   st_set_crs("WGS84")
 
 ## Plotting to make sure that we have overlaps
-tm_shape(subregion_shapes) +
-  tm_polygons() +
-  tm_shape(plant_points) +
-  tm_dots()
+# tm_shape(subregion_shapes) +
+#   tm_polygons() +
+#   tm_shape(plant_points) +
+#   tm_dots()
 
 overlap <- st_within(plant_points, subregion_shapes)
 
@@ -235,6 +238,20 @@ plant_emissions_wide <- plant_emissions_long %>%
            , values_from = scope2_co2e_tonnes_per_week)
 ```
 
+### Reading in Greenhouse Gas Emissions data (scope 1)
+
 ```{r}
-write_csv(plant_emissions_wide, file = here("scope_2_steel_plant_emissions.csv"))
+scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
+  clean_names()
+
+scope1 <- scope1_readin %>% 
+  mutate(address = tolower(gsub(",.*", "", reported_address))
+         , address = case_when(address == "2027 e. state hwy.198" ~ "2027 state hwy 198"
+                                    , TRUE ~ as.character(address))
+         , address = gsub("[.].*", "", address)) %>% 
+  select(-c(reporting_year, subparts, ghgrp_id, reported_address))
+
+
+scope_1_and_2 <- scope1 %>% 
+  right_join(plant_emissions_wide, by = "address")
 ```
