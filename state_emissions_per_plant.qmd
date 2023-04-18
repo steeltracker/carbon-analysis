@@ -40,11 +40,12 @@ egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet 
 # state_emissions <- state_emissions[-1,]
 
 subregion_emissions <- egrid2021_data %>%
-  mutate(co2e_lb_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
+  mutate(co2e_lbs_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
-         , subregion_name = e_grid_subregion_name) %>%
+         , subregion_name = e_grid_subregion_name
+         , co2e_tonnes_per_mwh = co2e_lbs_per_mwh / 2204.62262185) %>%
   filter(!subregion %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS")) %>% 
-  select(c(subregion, subregion_name, co2e_lb_per_mwh))
+  select(c(subregion, subregion_name, co2e_tonnes_per_mwh))
 
 subregion_emissions <- subregion_emissions[-1,]
 ```
@@ -206,7 +207,7 @@ regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions
 ### Emissions Intensity
 
 ```{r}
-## co2e_lb_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
+## co2e_tonnes_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
 
 ## Global Efficiency Intelligence states that it takes 710 KWH to produce 1 tonne of steel. "Global Efficiency Intelligence: Industrial Electrification in U.S. States"
 ## MWH per tonne of steel
@@ -223,19 +224,31 @@ AISI_longer <- AISI_data %>%
                    , region == "MW_util" ~ "Midwest"
                    , region == "S_util" ~ "Southern"
                    , region == "W_util" ~ "Western"))
+```
 
+### Finding Weekly Scope 2 values
+
+```{r}
 ## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes per week
 ## Converting to per thousand tons for weekly co2e
 plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
-  mutate(emissions_intensity_co2e_lb_per_tonne = (co2e_lb_per_mwh * eaf_MWH_per_tonne)
+  mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 52)
-         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_lb_per_tonne) / 2204.62262185) %>% 
+         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne)) %>% 
   mutate_if(is.numeric, round, 2)
 
 plant_emissions_wide <- plant_emissions_long %>% 
   select(-utilization) %>% 
   pivot_wider(names_from = week_end_date
            , values_from = scope2_co2e_tonnes_per_week)
+```
+
+### Finding Yearly Scope 2 values
+
+```{r}
+yearly_scope2 <- plant_emissions_long %>% 
+  group_by(plant_name) %>% 
+  summarise(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week))
 ```
 
 ### Reading in Greenhouse Gas Emissions data (scope 1)
