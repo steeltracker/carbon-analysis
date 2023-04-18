@@ -20,10 +20,6 @@ library(rmapshaper)
 ### Importing eGrid Data
 
 ```{r}
-## Importing state electricity values
-# egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
-#   clean_names()
-
 ## Importing grid region electricity values
 egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "SRL21") %>%
   clean_names()
@@ -32,13 +28,7 @@ egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet 
 ### Standardizing state names and cleaning up rows
 
 ```{r}
-# state_emissions <- egrid2021_data %>% 
-#   mutate(co2e = state_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh
-#          , state = state.name[match(state_abbreviation, state.abb)]) %>% 
-#   select(c(state, co2e))
-# 
-# state_emissions <- state_emissions[-1,]
-
+## Editing egrid data to be how we would like to use it
 subregion_emissions <- egrid2021_data %>%
   mutate(co2e_lbs_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
@@ -47,6 +37,7 @@ subregion_emissions <- egrid2021_data %>%
   filter(!subregion %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS")) %>% 
   select(c(subregion, subregion_name, co2e_tonnes_per_mwh))
 
+## Removing the first row since it is a part of the column names
 subregion_emissions <- subregion_emissions[-1,]
 ```
 
@@ -66,9 +57,7 @@ plant_capacity_data_processing <- gem_data %>%
          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
-         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
-         , address = tolower(gsub(",.*", "", location_address))
-         , address = gsub("[.].*", "", address)) %>% 
+         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
   select(plant_name
          , owner
          , coordinates
@@ -78,8 +67,7 @@ plant_capacity_data_processing <- gem_data %>%
          , start_date
          , plant_age_years
          , eaf_capacity
-         , municipality
-         , address)
+         , municipality)
 ```
 
 ### Only selecting columns we need for now
@@ -248,7 +236,7 @@ plant_emissions_wide <- plant_emissions_long %>%
 ```{r}
 yearly_scope2 <- plant_emissions_long %>% 
   group_by(plant_name) %>% 
-  summarise(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week))
+  summarize(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week))
 ```
 
 ### Reading in Greenhouse Gas Emissions data (scope 1)
@@ -257,14 +245,99 @@ yearly_scope2 <- plant_emissions_long %>%
 scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
   clean_names()
 
-scope1 <- scope1_readin %>% 
-  mutate(address = tolower(gsub(",.*", "", reported_address))
-         , address = case_when(address == "2027 e. state hwy.198" ~ "2027 state hwy 198"
-                                    , TRUE ~ as.character(address))
-         , address = gsub("[.].*", "", address)) %>% 
-  select(-c(reporting_year, subparts, ghgrp_id, reported_address))
+# zip_code_unique <- scope1_readin %>% 
+#   group_by(zip_code) %>% 
+#   summarise(n())
 
+scope1 <- scope1_readin %>% 
+  mutate(lat = round(as.numeric(latitude), 3)
+         , lon = round(as.numeric(longitude), 3)
+         , coordinates = paste0(lat, ",", lon)) %>%
+  select(-c(reporting_year, subparts, ghgrp_id, reported_address, latitude, longitude))
 
 scope_1_and_2 <- scope1 %>% 
-  right_join(plant_emissions_wide, by = "address")
+  left_join(yearly_scope2, by = "coordinates")
+```
+
+```{r}
+
+```
+
+### Code that we have tried throughout this document
+
+```{r}
+## Importing state electricity values
+# egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "ST21") %>% 
+#   clean_names()
+```
+
+```{r}
+## Reading in egrid data where we were looking at state values
+# state_emissions <- egrid2021_data %>% 
+#   mutate(co2e = state_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh
+#          , state = state.name[match(state_abbreviation, state.abb)]) %>% 
+#   select(c(state, co2e))
+# 
+# state_emissions <- state_emissions[-1,]
+```
+
+##### Attempting to join scope 1 and scope 2 data by different columns and attempts at standardizing both
+
+```{r}
+## Trying to standardize address
+
+# plant_capacity_data_processing <- gem_data %>% 
+#   filter(country == "United States"
+#          , status == "operating"
+#          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
+#   mutate(plant_name = plant_name_english
+#          , state = subnational_unit_province_state
+#          , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
+#          , address = tolower(gsub(",.*", "", location_address))
+#          , address = gsub("[.].*", "", address)) %>% 
+#   select(plant_name
+#          , owner
+#          , coordinates
+#          , country
+#          , state
+#          , status
+#          , start_date
+#          , plant_age_years
+#          , eaf_capacity
+#          , municipality
+#          , address)
+
+# scope1 <- scope1_readin %>% 
+#   mutate(address = tolower(gsub(",.*", "", reported_address))
+#          , address = case_when(address == "2027 e. state hwy.198" ~ "2027 state hwy 198"
+#                                     , TRUE ~ as.character(address))
+#          , address = gsub("[.].*", "", address)) %>% 
+#   select(-c(reporting_year, subparts, ghgrp_id, reported_address))
+# 
+# 
+# scope_1_and_2 <- scope1 %>% 
+#   right_join(plant_emissions_wide, by = "address")
+```
+
+```{r}
+## Trying to standardize lat and lon (only 4 matched after rounding down to 3 decimal places)
+
+# yearly_scope2 <- plant_emissions_long %>% 
+#   mutate(lat = round(as.numeric(lat), 3)
+#          , lon = round(as.numeric(lon), 3)
+#          , coordinates = paste0(lat, ",", lon)) %>% 
+#   group_by(plant_name, coordinates) %>% 
+#   summarise(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week))
+# 
+# scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
+#   clean_names()
+
+# scope1 <- scope1_readin %>% 
+#   mutate(lat = round(as.numeric(latitude), 3)
+#          , lon = round(as.numeric(longitude), 3)
+#          , coordinates = paste0(lat, ",", lon)) %>%
+#   select(-c(reporting_year, subparts, ghgrp_id, reported_address, latitude, longitude))
+# 
+# scope_1_and_2 <- scope1 %>% 
+#   left_join(yearly_scope2, by = "coordinates")
 ```
