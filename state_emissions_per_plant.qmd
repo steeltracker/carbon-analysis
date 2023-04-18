@@ -58,7 +58,8 @@ plant_capacity_data_processing <- gem_data %>%
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
          , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
-  select(plant_name
+  select(plant_id
+         , plant_name
          , owner
          , coordinates
          , country
@@ -235,8 +236,42 @@ plant_emissions_wide <- plant_emissions_long %>%
 
 ```{r}
 yearly_scope2 <- plant_emissions_long %>% 
-  group_by(plant_name) %>% 
-  summarize(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week))
+  group_by(plant_id, plant_name) %>% 
+  summarize(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week)) %>% 
+  ungroup()
+```
+
+```{r}
+###### Disregard this
+
+# %>% 
+#   mutate(plant_id = case_when(plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , plant_name == "" ~ 1003268
+#                               , TRUE ~ NA))
 ```
 
 ### Reading in Greenhouse Gas Emissions data (scope 1)
@@ -249,18 +284,11 @@ scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip 
 #   group_by(zip_code) %>% 
 #   summarise(n())
 
-scope1 <- scope1_readin %>% 
-  mutate(lat = round(as.numeric(latitude), 3)
-         , lon = round(as.numeric(longitude), 3)
-         , coordinates = paste0(lat, ",", lon)) %>%
+scope1 <- scope1_readin %>%
   select(-c(reporting_year, subparts, ghgrp_id, reported_address, latitude, longitude))
 
-scope_1_and_2 <- scope1 %>% 
-  left_join(yearly_scope2, by = "coordinates")
-```
-
-```{r}
-
+## scope_1_and_2 <- scope1 %>% 
+##  left_join(yearly_scope2, by = "coordinates")
 ```
 
 ### Code that we have tried throughout this document
