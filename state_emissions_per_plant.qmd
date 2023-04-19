@@ -243,11 +243,45 @@ yearly_scope2 <- plant_emissions_long %>%
   ungroup()
 
 zip_code_tidy <- yearly_scope2 %>% 
-  separate(col = address, into = c("1", "two", "three", "four", "5"), sep = ",") %>% 
-  select(-c("1", "5")) %>% 
-  mutate(two = parse_number(two)
-         , three = parse_number(three)
-         , four = parse_number(four))
+  separate(col = address, into = c("zip_code_part1", "zip_code_part2", "zip_code_part3", "zip_code_part4", "zip_code_part5"), sep = ",") %>% 
+  select(-c(zip_code_part1, zip_code_part5)) %>% 
+  mutate(zip_code_part2 = parse_number(zip_code_part2)
+         , zip_code_part3 = parse_number(zip_code_part3)
+         , zip_code_part4 = parse_number(zip_code_part4)
+         , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>% 
+  select(-c(zip_code_part2, zip_code_part3, zip_code_part4))
+
+unique_scope2_zip_code <- zip_code_tidy %>% 
+  group_by(zip_code) %>% 
+  summarise(count = n()) %>% 
+  filter(count < 2) %>% 
+  na.omit() %>%
+  ungroup() %>% 
+  select(zip_code)
+```
+
+### Reading in Greenhouse Gas Emissions data (scope 1)
+
+```{r}
+scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
+  clean_names()
+
+scope1 <- scope1_readin %>% 
+  select(c(zip_code, ghg_quantity_metric_tons_co2e))
+
+unique_scope1_zip_code <- scope1 %>% 
+  group_by(zip_code, ghg_quantity_metric_tons_co2e) %>% 
+  summarise(count = n()) %>% 
+  filter(count < 2) %>% 
+  na.omit() %>%
+  ungroup() %>% 
+  select(-count)
+
+unique_scope1_2_zip <- unique_scope1_zip_code %>% 
+  inner_join(unique_scope2_zip_code, by = "zip_code")
+
+zip_code_scope1_2 <- unique_scope1_2_zip %>% 
+  full_join(zip_code_tidy, by = "zip_code")
 ```
 
 ```{r}
@@ -281,23 +315,6 @@ zip_code_tidy <- yearly_scope2 %>%
 #                               , plant_name == "" ~ 1003268
 #                               , plant_name == "" ~ 1003268
 #                               , TRUE ~ NA))
-```
-
-### Reading in Greenhouse Gas Emissions data (scope 1)
-
-```{r}
-scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
-  clean_names()
-
-# zip_code_unique <- scope1_readin %>% 
-#   group_by(zip_code) %>% 
-#   summarise(n())
-
-scope1 <- scope1_readin %>%
-  select(-c(reporting_year, subparts, ghgrp_id, reported_address, latitude, longitude))
-
-## scope_1_and_2 <- scope1 %>% 
-##  left_join(yearly_scope2, by = "coordinates")
 ```
 
 ### Code that we have tried throughout this document
