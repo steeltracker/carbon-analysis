@@ -57,7 +57,8 @@ plant_capacity_data_processing <- gem_data %>%
          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
-         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)) %>% 
+         , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
+         , address = location_address) %>%
   select(plant_id
          , plant_name
          , owner
@@ -68,7 +69,8 @@ plant_capacity_data_processing <- gem_data %>%
          , start_date
          , plant_age_years
          , eaf_capacity
-         , municipality)
+         , municipality
+         , address)
 ```
 
 ### Only selecting columns we need for now
@@ -87,7 +89,7 @@ plant_capacity <- plant_capacity_data_processing %>%
 
 ```{r}
 ## Reading in data
-subregion_shapes_raw <- read_sf("~/Desktop/meds-courses/capstone-files/data/egrid2020_subregions/eGRID2020_subregions.shp") %>% 
+subregion_shapes_raw <- read_sf(here("..", "data", "egrid2020_subregions", "eGRID2020_subregions.shp")) %>% 
   clean_names() %>% 
   filter(!zip_subregi %in% c("AKGD", "AKMS", "HIMS", "HIOA", "PRMS"))
 
@@ -236,9 +238,16 @@ plant_emissions_wide <- plant_emissions_long %>%
 
 ```{r}
 yearly_scope2 <- plant_emissions_long %>% 
-  group_by(plant_id, plant_name) %>% 
+  group_by(plant_id, plant_name, address) %>% 
   summarize(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week)) %>% 
   ungroup()
+
+zip_code_tidy <- yearly_scope2 %>% 
+  separate(col = address, into = c("1", "two", "three", "four", "5"), sep = ",") %>% 
+  select(-c("1", "5")) %>% 
+  mutate(two = parse_number(two)
+         , three = parse_number(three)
+         , four = parse_number(four))
 ```
 
 ```{r}
