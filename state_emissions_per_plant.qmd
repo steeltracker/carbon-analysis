@@ -239,11 +239,17 @@ plant_emissions_wide <- plant_emissions_long %>%
 ```{r}
 yearly_scope2 <- plant_emissions_long %>% 
   group_by(plant_id, plant_name, address) %>% 
-  summarize(yearly_scope2_co2e = sum(scope2_co2e_tonnes_per_week)) %>% 
+  summarize(yearly_scope2_co2e_tonnes = sum(scope2_co2e_tonnes_per_week)) %>% 
   ungroup()
+```
 
-zip_code_tidy <- yearly_scope2 %>% 
-  separate(col = address, into = c("zip_code_part1", "zip_code_part2", "zip_code_part3", "zip_code_part4", "zip_code_part5"), sep = ",") %>% 
+### Extracting zip codes
+
+```{r}
+## Extracting zip code from address
+zipcode_extraction <- yearly_scope2 %>% 
+  mutate(address2 = address) %>% 
+  separate(col = address2, into = c("zip_code_part1", "zip_code_part2", "zip_code_part3", "zip_code_part4", "zip_code_part5"), sep = ",") %>% 
   select(-c(zip_code_part1, zip_code_part5)) %>% 
   mutate(zip_code_part2 = parse_number(zip_code_part2)
          , zip_code_part3 = parse_number(zip_code_part3)
@@ -251,13 +257,16 @@ zip_code_tidy <- yearly_scope2 %>%
          , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>% 
   select(-c(zip_code_part2, zip_code_part3, zip_code_part4))
 
-unique_scope2_zip_code <- zip_code_tidy %>% 
+checking_unique_zip_codes_scope_2 <- zipcode_extraction %>% 
   group_by(zip_code) %>% 
   summarise(count = n()) %>% 
   filter(count < 2) %>% 
-  na.omit() %>%
+  drop_na() %>%
   ungroup() %>% 
   select(zip_code)
+
+unique_scope2_zip_codes <- checking_unique_zip_codes_scope_2 %>% 
+  left_join(zipcode_extraction, by = "zip_code")
 ```
 
 ### Reading in Greenhouse Gas Emissions data (scope 1)
@@ -267,22 +276,37 @@ scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip 
   clean_names()
 
 scope1 <- scope1_readin %>% 
-  select(c(zip_code, ghg_quantity_metric_tons_co2e))
+  select(c(zip_code
+           , ghg_quantity_metric_tons_co2e
+           , ghgrp_id)) %>% 
+  drop_na()
 
-unique_scope1_zip_code <- scope1 %>% 
-  group_by(zip_code, ghg_quantity_metric_tons_co2e) %>% 
+checking_unique_zip_codes_scope_1 <- scope1 %>% 
+  group_by(zip_code) %>% 
   summarise(count = n()) %>% 
   filter(count < 2) %>% 
-  na.omit() %>%
   ungroup() %>% 
-  select(-count)
+  select(zip_code)
 
-unique_scope1_2_zip <- unique_scope1_zip_code %>% 
-  inner_join(unique_scope2_zip_code, by = "zip_code")
-
-zip_code_scope1_2 <- unique_scope1_2_zip %>% 
-  full_join(zip_code_tidy, by = "zip_code")
+unique_scope1_zip_codes <- checking_unique_zip_codes_scope_1 %>% 
+  left_join(scope1, by = "zip_code")
 ```
+
+### Joining Scope 1 and Scope 2 Zipcodes
+
+```{r}
+scope_1_and_2_matches <- unique_scope1_zip_codes %>% 
+  right_join(unique_scope2_zip_codes, by = "zip_code") %>% 
+  drop_na() %>% 
+  rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e) %>% 
+  relocate(address, .after = zip_code)
+```
+
+# Got up to searching the 15th zip code. All is well. Address mismatch noted
+
+
+
+
 
 ```{r}
 ###### Disregard this
