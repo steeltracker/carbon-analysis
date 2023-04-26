@@ -292,21 +292,17 @@ unique_scope1_zip_codes <- checking_unique_zip_codes_scope_1 %>%
   left_join(scope1, by = "zip_code")
 ```
 
-### Joining Scope 1 and Scope 2 Zipcodes
+### Joining scope 1 and scope 2 zip codes
 
 ```{r}
+## Manually checked zip codes and addresses and plant names and the following are for sure a match
 scope_1_and_2_matches <- unique_scope1_zip_codes %>% 
   right_join(unique_scope2_zip_codes, by = "zip_code") %>% 
   drop_na() %>% 
   rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e) %>% 
-  relocate(address, .after = zip_code)
+  relocate(address, .after = zip_code) %>% 
+  relocate(plant_name, .after = address)
 ```
-
-# Got up to searching the 15th zip code. All is well. Address mismatch noted
-
-
-
-
 
 ```{r}
 ###### Disregard this
