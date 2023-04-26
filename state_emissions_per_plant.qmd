@@ -304,38 +304,31 @@ scope_1_and_2_matches <- unique_scope1_zip_codes %>%
   relocate(plant_name, .after = address)
 ```
 
-```{r}
-###### Disregard this
+### Anti-Joining to find remaining zip codes
 
-# %>% 
-#   mutate(plant_id = case_when(plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , plant_name == "" ~ 1003268
-#                               , TRUE ~ NA))
+```{r}
+remaining_zip_codes <-  zipcode_extraction %>% 
+  anti_join(scope_1_and_2_matches, by = "zip_code")
+
+## Making sure zip codes match if they are in 
+corrected_ghgids <- remaining_zip_codes %>% 
+  mutate(ghgrp_id = case_when(plant_id == "SUS00002" ~ "1003268"
+                              , plant_id == "SUS00007" ~ "1003668"
+                              , plant_id == "SUS00015" ~ "1000394"
+                              , plant_id == "SUS00061" ~ "1001699"
+                              , plant_id == "SUS00042" ~ "1004616"
+                              , plant_id == "SUS00019" ~ "1002977"
+                              , plant_id == "SUS00025" ~ "1007642"
+                              , plant_id == "SUS00032" ~ "1007921")
+         , ghgrp_id = as.numeric(ghgrp_id)
+         )
+
+scope_1_and_2_matches_complete <- scope_1_and_2_matches %>% 
+  full_join(corrected_ghgids) %>% 
+  right_join(zipcode_extraction, by = "plant_id")
 ```
+
+## OKAY NOW THEY ARE ALMOST FULLY JOINED. WE JUST NEED TO GET THE FINAL SCOPE 1 AMOUNTS JOINED ONTO THEM TOO AND THEN WE ARE DONE
 
 ### Code that we have tried throughout this document
 
