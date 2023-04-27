@@ -321,11 +321,13 @@ corrected_ghgids <- remaining_zip_codes %>%
                               , plant_id == "SUS00025" ~ "1007642"
                               , plant_id == "SUS00032" ~ "1007921")
          , ghgrp_id = as.numeric(ghgrp_id)
-         )
+         ) %>% 
+  left_join(scope1, by = "ghgrp_id") %>% 
+  select(-c(zip_code.x, zip_code.y)) %>% 
+  rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e)
 
 scope_1_and_2_matches_complete <- scope_1_and_2_matches %>% 
-  full_join(corrected_ghgids) %>% 
-  right_join(zipcode_extraction, by = "plant_id")
+  full_join(corrected_ghgids)
 ```
 
 ## OKAY NOW THEY ARE ALMOST FULLY JOINED. WE JUST NEED TO GET THE FINAL SCOPE 1 AMOUNTS JOINED ONTO THEM TOO AND THEN WE ARE DONE
