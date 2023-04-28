@@ -234,12 +234,12 @@ scope2_plant_emissions_wide <- scope2_plant_emissions_long %>%
            , values_from = scope2_co2e_tonnes_per_week)
 ```
 
-### Finding Yearly Scope 2 values
+### Finding Scope 2 values for the complete 2021 year
 
 ```{r}
 yearly_scope2 <- scope2_plant_emissions_long %>% 
   group_by(plant_id, plant_name, address, lat, lon) %>% 
-  summarize(yearly_scope2_co2e_tonnes = sum(scope2_co2e_tonnes_per_week)) %>% 
+  summarize(scope2_co2e_tonnes_2021 = sum(scope2_co2e_tonnes_per_week)) %>% 
   ungroup()
 ```
 
@@ -299,7 +299,7 @@ unique_scope1_zipcodes <- checking_unique_zipcodes_scope1 %>%
 scope_1_and_2_zipcode_matches <- unique_scope1_zipcodes %>% 
   right_join(unique_scope2_zip_codes, by = "zip_code") %>% 
   drop_na() %>% 
-  rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e) %>% 
+  rename(scope1_co2e_tonnes_2021 = ghg_quantity_metric_tons_co2e) %>% 
   relocate(address, .after = zip_code) %>% 
   relocate(plant_name, .after = address)
 ```
@@ -324,18 +324,23 @@ corrected_ghgids <- remaining_zipcodes %>%
          ) %>% 
   left_join(scope1, by = "ghgrp_id") %>% 
   select(-c(zip_code.x, zip_code.y)) %>% 
-  rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e)
+  rename(scope1_co2e_tonnes_2021 = ghg_quantity_metric_tons_co2e)
 ```
 
 ### Combining all of our data to get a final dataset with scope 1 and 2 values
 
 ```{r}
-yearly_scope_1_and_2_emissions <- scope_1_and_2_zipcode_matches %>% 
+scope_1_and_2_emissions_2021 <- scope_1_and_2_zipcode_matches %>% 
   full_join(corrected_ghgids) %>% 
   select(-zip_code) %>% 
   relocate(c(plant_id, lat, lon), .before = address) %>% 
   relocate(c(ghgrp_id, plant_name), .after = plant_id) %>% 
-  mutate(yearly_co2e_tonnes = yearly_scope1_co2e_tonnes + yearly_scope2_co2e_tonnes, .after = address)
+  mutate(co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address) %>% 
+  mutate_if(is.numeric, round, 2)
+```
+
+```{r}
+write_csv(scope_1_and_2_emissions_2021, here("steel_plant_emissions_2021.csv"))
 ```
 
 ## Code that we have tried throughout this document
