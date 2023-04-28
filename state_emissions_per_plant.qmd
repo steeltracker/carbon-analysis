@@ -29,7 +29,7 @@ egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet 
 
 ```{r}
 ## Editing egrid data to be how we would like to use it
-subregion_emissions <- egrid2021_data %>%
+emissions_by_subregion <- egrid2021_data %>%
   mutate(co2e_lbs_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
          , subregion_name = e_grid_subregion_name
@@ -38,20 +38,20 @@ subregion_emissions <- egrid2021_data %>%
   select(c(subregion, subregion_name, co2e_tonnes_per_mwh))
 
 ## Removing the first row since it is a part of the column names
-subregion_emissions <- subregion_emissions[-1,]
+emissions_by_subregion <- emissions_by_subregion[-1,]
 ```
 
 ### Importing GEM data
 
 ```{r}
-gem_data <- readxl::read_excel(here("data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
+gem_data_readin <- readxl::read_excel(here("data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
   clean_names()
 ```
 
 ### Filtering to only look at plants and data that we are interested in
 
 ```{r}
-plant_capacity_data_processing <- gem_data %>% 
+gem_data <- gem_data_readin %>% 
   filter(country == "United States"
          , status == "operating"
          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
@@ -76,7 +76,7 @@ plant_capacity_data_processing <- gem_data %>%
 ### Only selecting columns we need for now
 
 ```{r}
-plant_capacity <- plant_capacity_data_processing %>% 
+plant_capacity <- gem_data %>% 
   select(-c(country
          , owner
          , start_date
@@ -122,7 +122,7 @@ plant_capacity <- plant_capacity %>%
 ### Merging data
 
 ```{r}
-plant_emissions_by_subregion <- left_join(plant_capacity, subregion_emissions, by = "subregion")
+plant_emissions_by_subregion <- left_join(plant_capacity, emissions_by_subregion, by = "subregion")
 ```
 
 ### Importing AISI data
@@ -222,13 +222,13 @@ AISI_longer <- AISI_data %>%
 ```{r}
 ## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes per week
 ## Converting to per thousand tons for weekly co2e
-plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
+scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 52)
          , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne)) %>% 
   mutate_if(is.numeric, round, 2)
 
-plant_emissions_wide <- plant_emissions_long %>% 
+scope2_plant_emissions_wide <- scope2_plant_emissions_long %>% 
   select(-utilization) %>% 
   pivot_wider(names_from = week_end_date
            , values_from = scope2_co2e_tonnes_per_week)
@@ -237,8 +237,8 @@ plant_emissions_wide <- plant_emissions_long %>%
 ### Finding Yearly Scope 2 values
 
 ```{r}
-yearly_scope2 <- plant_emissions_long %>% 
-  group_by(plant_id, plant_name, address) %>% 
+yearly_scope2 <- scope2_plant_emissions_long %>% 
+  group_by(plant_id, plant_name, address, lat, lon) %>% 
   summarize(yearly_scope2_co2e_tonnes = sum(scope2_co2e_tonnes_per_week)) %>% 
   ungroup()
 ```
@@ -257,7 +257,7 @@ zipcode_extraction <- yearly_scope2 %>%
          , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>% 
   select(-c(zip_code_part2, zip_code_part3, zip_code_part4))
 
-checking_unique_zip_codes_scope_2 <- zipcode_extraction %>% 
+checking_unique_zipcodes_scope2 <- zipcode_extraction %>% 
   group_by(zip_code) %>% 
   summarise(count = n()) %>% 
   filter(count < 2) %>% 
@@ -265,7 +265,7 @@ checking_unique_zip_codes_scope_2 <- zipcode_extraction %>%
   ungroup() %>% 
   select(zip_code)
 
-unique_scope2_zip_codes <- checking_unique_zip_codes_scope_2 %>% 
+unique_scope2_zip_codes <- checking_unique_zipcodes_scope2 %>% 
   left_join(zipcode_extraction, by = "zip_code")
 ```
 
@@ -281,14 +281,14 @@ scope1 <- scope1_readin %>%
            , ghgrp_id)) %>% 
   drop_na()
 
-checking_unique_zip_codes_scope_1 <- scope1 %>% 
+checking_unique_zipcodes_scope1 <- scope1 %>% 
   group_by(zip_code) %>% 
   summarise(count = n()) %>% 
   filter(count < 2) %>% 
   ungroup() %>% 
   select(zip_code)
 
-unique_scope1_zip_codes <- checking_unique_zip_codes_scope_1 %>% 
+unique_scope1_zipcodes <- checking_unique_zipcodes_scope1 %>% 
   left_join(scope1, by = "zip_code")
 ```
 
@@ -296,7 +296,7 @@ unique_scope1_zip_codes <- checking_unique_zip_codes_scope_1 %>%
 
 ```{r}
 ## Manually checked zip codes and addresses and plant names and the following are for sure a match
-scope_1_and_2_matches <- unique_scope1_zip_codes %>% 
+scope_1_and_2_zipcode_matches <- unique_scope1_zipcodes %>% 
   right_join(unique_scope2_zip_codes, by = "zip_code") %>% 
   drop_na() %>% 
   rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e) %>% 
@@ -307,11 +307,11 @@ scope_1_and_2_matches <- unique_scope1_zip_codes %>%
 ### Anti-Joining to find remaining zip codes
 
 ```{r}
-remaining_zip_codes <-  zipcode_extraction %>% 
-  anti_join(scope_1_and_2_matches, by = "zip_code")
+remaining_zipcodes <-  zipcode_extraction %>% 
+  anti_join(scope_1_and_2_zipcode_matches, by = "zip_code")
 
 ## Making sure zip codes match if they are in 
-corrected_ghgids <- remaining_zip_codes %>% 
+corrected_ghgids <- remaining_zipcodes %>% 
   mutate(ghgrp_id = case_when(plant_id == "SUS00002" ~ "1003268"
                               , plant_id == "SUS00007" ~ "1003668"
                               , plant_id == "SUS00015" ~ "1000394"
@@ -325,14 +325,20 @@ corrected_ghgids <- remaining_zip_codes %>%
   left_join(scope1, by = "ghgrp_id") %>% 
   select(-c(zip_code.x, zip_code.y)) %>% 
   rename(yearly_scope1_co2e_tonnes = ghg_quantity_metric_tons_co2e)
-
-scope_1_and_2_matches_complete <- scope_1_and_2_matches %>% 
-  full_join(corrected_ghgids)
 ```
 
-## OKAY NOW THEY ARE ALMOST FULLY JOINED. WE JUST NEED TO GET THE FINAL SCOPE 1 AMOUNTS JOINED ONTO THEM TOO AND THEN WE ARE DONE
+### Combining all of our data to get a final dataset with scope 1 and 2 values
 
-### Code that we have tried throughout this document
+```{r}
+yearly_scope_1_and_2_emissions <- scope_1_and_2_zipcode_matches %>% 
+  full_join(corrected_ghgids) %>% 
+  select(-zip_code) %>% 
+  relocate(c(plant_id, lat, lon), .before = address) %>% 
+  relocate(c(ghgrp_id, plant_name), .after = plant_id) %>% 
+  mutate(yearly_co2e_tonnes = yearly_scope1_co2e_tonnes + yearly_scope2_co2e_tonnes, .after = address)
+```
+
+## Code that we have tried throughout this document
 
 ```{r}
 ## Importing state electricity values
@@ -355,7 +361,7 @@ scope_1_and_2_matches_complete <- scope_1_and_2_matches %>%
 ```{r}
 ## Trying to standardize address
 
-# plant_capacity_data_processing <- gem_data %>% 
+# gem_data <- gem_data %>% 
 #   filter(country == "United States"
 #          , status == "operating"
 #          , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
@@ -385,13 +391,13 @@ scope_1_and_2_matches_complete <- scope_1_and_2_matches %>%
 # 
 # 
 # scope_1_and_2 <- scope1 %>% 
-#   right_join(plant_emissions_wide, by = "address")
+#   right_join(scope2_plant_emissions_wide, by = "address")
 ```
 
 ```{r}
 ## Trying to standardize lat and lon (only 4 matched after rounding down to 3 decimal places)
 
-# yearly_scope2 <- plant_emissions_long %>% 
+# yearly_scope2 <- scope2_plant_emissions_long %>% 
 #   mutate(lat = round(as.numeric(lat), 3)
 #          , lon = round(as.numeric(lon), 3)
 #          , coordinates = paste0(lat, ",", lon)) %>% 
