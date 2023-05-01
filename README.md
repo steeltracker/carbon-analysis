@@ -1,6 +1,6 @@
 # Evaluating Carbon Emissions of Steel Plants in the United States
 
-![image](https://github.com/steeltracker/carbon-analysis/blob/main/steel_plant.jpeg)
+![image](https://github.com/steeltracker/carbon-analysis/blob/main/steel_plant.jpg)
 
 ## Project Motivation
 #### Goal
