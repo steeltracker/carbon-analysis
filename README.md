@@ -20,7 +20,7 @@ You can also find the links to the datasets below:
 ###### eGrid Subregions Shapefile(zip): https://www.epa.gov/egrid/egrid-mapping-files  
 
 #### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
-Below is the structure of this repository: 
+The data folder contains all 5 datsets used to conduct the analysis. The analysis folder has the R markdown and Python Notebook. The output data folder has the final dataframes after joining the required data. The deliverables folder contains the technical documentation of the project and a summary of the analysis. The references folder includes the citations saved as pdfs. Below is the structure of this repository: 
 
 	A.	steel_carbon_emissions_analysis
 		a.	data
@@ -36,7 +36,7 @@ Below is the structure of this repository:
 			i.	scope2_emissions_annual_weekly.csv
 			ii.	scope1_and_scope2_emissions_annual.csv
 	B.	deliverables
-		a.   technical_documentaion.docx
+		a.      technical_documentaion.docx
 		b.	summary_of_analysis.docx
 	C.	references
 		a.	hasenbeigi_GEI_report.pdf
