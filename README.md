@@ -1,4 +1,4 @@
-# Carbon-Analysis
+# Carbon Analysis
 ##	Project Motivation
 #### Goal
 Calculate and analyze the weekly and annual emissions intensity of electrified steel production in the United States at the individual plant level. 
@@ -9,10 +9,14 @@ Approximately 70% of steel produced in the US is from electrified steel plants w
 ### 1. Fork and clone this repo
 ### 2. Download and unzip the data folder and save the data in the following folder path: carbon-analysis/data/. The data is in a zip folder, because some files were too large. 
 You can also find the links to the datasets below:
-	AISI (American Iron and Steel Institute):
+ AISI (American Iron and Steel Institute):
+ 
 	GEM (Global Energy Monitor): Contact 
+	
 	EPA eGrid:
+	
 	EPA GHG Reporting Program:
+	
 	eGrid Subregions Shapefile(zip): https://www.epa.gov/egrid/egrid-mapping-files 
 
 ### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
