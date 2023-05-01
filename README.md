@@ -53,13 +53,13 @@ Amrit Sandhu,      Github: @aksandhu23,       Email: aksandhu@bren.ucsb.edu
 Michael Zargari,   Github: @mzargari,         Email: mzargari@bren.ucsb.edu
 
 ## References 
-a.	Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
+	a.	Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
 
-b.	World Steel Association. World Steel in Figures 2022. https://worldsteel.org/steel-topics/statistics/world-steel-in-figures-2022/#major-steel-producing-countries-2021-and-2020.  
+	b.	World Steel Association. World Steel in Figures 2022. https://worldsteel.org/steel-topics/statistics/world-steel-in-figures-2022/#major-steel-producing-countries-2021-and-2020.  
 
-c.	Hasanbeigi, A. 2022. What is Green Steel? https://www.globalefficiencyintel.com/what-is-green-steel. 
+	c.	Hasanbeigi, A. 2022. What is Green Steel? https://www.globalefficiencyintel.com/what-is-green-steel. 
 
-d.	Global Energy Monitor. Global Steel Plant Tracker. https://globalenergymonitor.org/projects/global-steel-plant-tracker/. 
+	d.	Global Energy Monitor. Global Steel Plant Tracker. https://globalenergymonitor.org/projects/global-steel-plant-tracker/. 
 
-e.	Emissions & Generation Resource Integrated Database (eGRID) https://www.epa.gov/egrid.
+	e.	Emissions & Generation Resource Integrated Database (eGRID) https://www.epa.gov/egrid.
 
