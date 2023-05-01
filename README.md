@@ -46,13 +46,13 @@ The data folder contains all 5 datsets used to conduct the analysis. The analysi
 ## Collaborators 
 If you have any questions, comments, or concerns, please reach out to a team member using the information below:
 
-Erica Bishop,      Github: @erica-bishop,     Email: ericabishop@bren.ucsb.edu
+##### Erica Bishop,      Github: @erica-bishop,     Email: ericabishop@bren.ucsb.edu
 
-Ruth Enriquez,     Github: @ruthe808,         Email: rbe786@bren.ucsb.edu
+##### Ruth Enriquez,     Github: @ruthe808,         Email: rbe786@bren.ucsb.edu
 
-Amrit Sandhu,      Github: @aksandhu23,       Email: aksandhu@bren.ucsb.edu
+##### Amrit Sandhu,      Github: @aksandhu23,       Email: aksandhu@bren.ucsb.edu
 
-Michael Zargari,   Github: @mzargari,         Email: mzargari@bren.ucsb.edu
+##### Michael Zargari,   Github: @mzargari,         Email: mzargari@bren.ucsb.edu
 
 Affiliation: This project was carried out as a part of the Masters in Environmental Data Science program at UC Santa Barbara. The client for this project was [Global Energy Monitor(GEM)](https://globalenergymonitor.org/projects/global-steel-plant-tracker/), an organization dedicated to heavy industry decarbonization. The primary contact from GEM was Caitlin Swalec and the faculty advisor from the Bren School of Environment was Roland Geyer. 
 
