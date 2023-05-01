@@ -9,7 +9,8 @@ Approximately 70% of steel produced in the US is from electrified steel plants w
 ### 1. Fork and clone this repo
 ### 2. Download and unzip the data folder and save the data in the following folder path: carbon-analysis/data/. The data is in a zip folder, because some files were too large. 
 You can also find the links to the datasets below:
- AISI (American Iron and Steel Institute):
+
+	AISI (American Iron and Steel Institute):
  
 	GEM (Global Energy Monitor): Contact 
 	
@@ -46,8 +47,13 @@ b.	swalec_GEM_report.pdf
 Author Information(link to GitHub accounts): Erica Bishop, Ruth Enriquez, Amrit Sandhu, Michael Zargari
 
 ## References 
-a.	Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities. 
+a.	Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
+
 b.	World Steel Association. World Steel in Figures 2022. https://worldsteel.org/steel-topics/statistics/world-steel-in-figures-2022/#major-steel-producing-countries-2021-and-2020.  
+
 c.	Hasanbeigi, A. 2022. What is Green Steel? https://www.globalefficiencyintel.com/what-is-green-steel. 
+
 d.	Global Energy Monitor. Global Steel Plant Tracker. https://globalenergymonitor.org/projects/global-steel-plant-tracker/. 
+
 e.	Emissions & Generation Resource Integrated Database (eGRID) https://www.epa.gov/egrid.
+
