@@ -6,8 +6,8 @@ Calculate and analyze the weekly and annual emissions intensity of electrified s
 Approximately 70% of steel produced in the US is from electrified steel plants which use EAF (Electric Arc Furnace) as opposed to the traditional blast furnaces that rely heavily on coal. Blast furnaces comparatively create more direct emissions from burning the coal on site to create steel and EAF steel plants produce emissions off site when using the power needed to melt scrap and direct-reduce iron (DRI) inputs. While there is data on the direct emissions (Scope 1) from steel plants, there is a lack of transparency regarding the indirect emissions (Scope 2) and this project aimed to bridge that knowledge gap. 
 
 ## How to Install and Run the Project
-### 1. Fork and clone this repo
-### 2. Download and unzip the data folder and save the data in the following folder path: carbon-analysis/data/. The data is in a zip folder, because some files were too large. 
+#### 1. Fork and clone this repo
+#### 2. Download and unzip the data folder and save the data in the following folder path: carbon-analysis/data/. The data is in a zip folder, because some files were too large. 
 You can also find the links to the datasets below:
 
 	AISI (American Iron and Steel Institute):
@@ -18,32 +18,32 @@ You can also find the links to the datasets below:
 	
 	EPA GHG Reporting Program:
 	
-	eGrid Subregions Shapefile(zip): https://www.epa.gov/egrid/egrid-mapping-files 
+	eGrid Subregions Shapefile(zip): https://www.epa.gov/egrid/egrid-mapping-files  
 
-### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
+#### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
 Below is the structure of this repository: 
-A.	steel_carbon_emissions_analysis
 
-	a.	data
-		i.	gem_2022_plant_info.xlsx
-		ii.	egrid_2020_subregions.shp
-		iii.	egrid_2021_emissions_intensity.xlsx
-		iv.	aisi_2021_util_rate.xlsx
-		v.	flight_2021_scope1_emissions.xls
-	b.	analysis
-		i.	steel_carbon_analysis.R
-		ii.	steel_carbon_analsysis.ipynb
-	c.	output_data
-		i.	scope2_emissions_annual_weekly.csv
-		ii.	scope1_and_scope2_emissions_annual.csv
-B.	deliverables
-	a.   technical_documentaion.docx
-	b.	summary_of_analysis.docx
-C.	references
-	a.	hasenbeigi_GEI_report.pdf
-	b.	swalec_GEM_report.pdf
+	A.	steel_carbon_emissions_analysis
+		a.	data
+			i.	gem_2022_plant_info.xlsx
+			ii.	egrid_2020_subregions.shp
+			iii.	egrid_2021_emissions_intensity.xlsx
+			iv.	aisi_2021_util_rate.xlsx
+			v.	flight_2021_scope1_emissions.xls
+		b.	analysis
+			i.	steel_carbon_analysis.R
+			ii.	steel_carbon_analsysis.ipynb
+		c.	output_data
+			i.	scope2_emissions_annual_weekly.csv
+			ii.	scope1_and_scope2_emissions_annual.csv
+	B.	deliverables
+		a.   technical_documentaion.docx
+		b.	summary_of_analysis.docx
+	C.	references
+		a.	hasenbeigi_GEI_report.pdf
+		b.	swalec_GEM_report.pdf
 	
-### 4. The interactive map is hosted on the Tableau server and can be found here.
+#### 4. The interactive map is hosted on the Tableau server and can be found here.
 
 ## Collaborators 
 Author Information(link to GitHub accounts): Erica Bishop, Ruth Enriquez, Amrit Sandhu, Michael Zargari
