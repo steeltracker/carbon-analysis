@@ -54,7 +54,7 @@ Amrit Sandhu,      Github: @aksandhu23,       Email: aksandhu@bren.ucsb.edu
 
 Michael Zargari,   Github: @mzargari,         Email: mzargari@bren.ucsb.edu
 
-Affiliation: This project was carried out as a part of the Masters in Environmental Data Science program at UC Santa Barbara. The client for this project was Global Energy Monitor(GEM), an organization dedicated to heavy industry decarbonization. The primary contact from GEM was Caitlin Swalec and the faculty advisor from the Bren School of Environment was Roland Geyer. 
+Affiliation: This project was carried out as a part of the Masters in Environmental Data Science program at UC Santa Barbara. The client for this project was [Global Energy Monitor(GEM)](https://globalenergymonitor.org/projects/global-steel-plant-tracker/), an organization dedicated to heavy industry decarbonization. The primary contact from GEM was Caitlin Swalec and the faculty advisor from the Bren School of Environment was Roland Geyer. 
 
 ## References 
 Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
