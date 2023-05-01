@@ -45,7 +45,7 @@ Below is the structure of this repository:
 #### 4. The interactive map is hosted on the Tableau server and can be found here.
 
 ## Collaborators 
-If you have any questions, comments, or concerns, please reach out to a group member using the information below:
+If you have any questions, comments, or concerns, please reach out to a team member using the information below:
 
 Erica Bishop,      Github: @erica-bishop,     Email: ericabishop@bren.ucsb.edu
 
