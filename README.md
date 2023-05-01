@@ -1,4 +1,7 @@
 # Evaluating Carbon Emissions of Steel Plants in the United States
+
+![image](https://github.com/steeltracker/carbon-analysis/blob/main/steel_plant.jpeg)
+
 ## Project Motivation
 #### Goal
 Calculate and analyze the weekly and annual emissions intensity of electrified steel production in the United States at the individual plant level. 
