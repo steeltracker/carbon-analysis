@@ -42,7 +42,12 @@ Below is the structure of this repository:
 #### 4. The interactive map is hosted on the Tableau server and can be found here.
 
 ## Collaborators 
-Author Information(link to GitHub accounts): Erica Bishop, Ruth Enriquez, Amrit Sandhu, Michael Zargari
+If you have any questions, comments, or concerns, please reach out to a group member using the information below:
+
+Erica Bishop      Github: @erica-bishop     Email: ericabishop@bren.ucsb.edu\
+Ruth Enriquez     Github: @ruthe808         Email: rbe786@bren.ucsb.edu\
+Amrit Sandhu      Github: @aksandhu23       Email: aksandhu@bren.ucsb.edu\
+Michael Zargari   Github: @mzargari         Email: mzargari@bren.ucsb.edu\
 
 ## References 
 a.	Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
