@@ -54,7 +54,9 @@ gem_data_readin <- readxl::read_excel(here("data", "GEM_2022_data.xlsx"), sheet 
 gem_data <- gem_data_readin %>% 
   filter(country == "United States"
          , status == "operating"
-         , nominal_eaf_steel_capacity_ttpa != "N/A") %>% 
+         , nominal_eaf_steel_capacity_ttpa != "N/A"
+         , start_date < 2022
+         , !plant_id %in% c("SUS00009", "SUS00061")) %>% 
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
          , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
@@ -247,14 +249,14 @@ yearly_scope2 <- scope2_plant_emissions_long %>%
 
 ```{r}
 ## Extracting zip code from address
-zipcode_extraction <- yearly_scope2 %>% 
-  mutate(address2 = address) %>% 
-  separate(col = address2, into = c("zip_code_part1", "zip_code_part2", "zip_code_part3", "zip_code_part4", "zip_code_part5"), sep = ",") %>% 
-  select(-c(zip_code_part1, zip_code_part5)) %>% 
+zipcode_extraction <- yearly_scope2 %>%
+  mutate(address2 = address) %>%
+  separate(col = address2, into = c("zip_code_part1", "zip_code_part2", "zip_code_part3", "zip_code_part4", "zip_code_part5"), sep = ",") %>%
+  select(-c(zip_code_part1, zip_code_part5)) %>%
   mutate(zip_code_part2 = parse_number(zip_code_part2)
          , zip_code_part3 = parse_number(zip_code_part3)
          , zip_code_part4 = parse_number(zip_code_part4)
-         , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>% 
+         , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>%
   select(-c(zip_code_part2, zip_code_part3, zip_code_part4))
 
 checking_unique_zipcodes_scope2 <- zipcode_extraction %>% 
@@ -319,7 +321,8 @@ corrected_ghgids <- remaining_zipcodes %>%
                               , plant_id == "SUS00042" ~ "1004616"
                               , plant_id == "SUS00019" ~ "1002977"
                               , plant_id == "SUS00025" ~ "1007642"
-                              , plant_id == "SUS00032" ~ "1007921")
+                              , plant_id == "SUS00032" ~ "1007921"
+                              , plant_id == "SUS00058" ~ "1007348")
          , ghgrp_id = as.numeric(ghgrp_id)
          ) %>% 
   left_join(scope1, by = "ghgrp_id") %>% 
@@ -420,4 +423,18 @@ write_csv(scope_1_and_2_emissions_2021, here("steel_plant_emissions_2021.csv"))
 # 
 # scope_1_and_2 <- scope1 %>% 
 #   left_join(yearly_scope2, by = "coordinates")
+```
+
+```{r}
+## Was using this method to get the correct zip codes but it leads to less matches than using the zip codes from the addresses already provided by GEM
+
+# library(zipcodeR)
+# 
+# vector <- c()
+# for (i in seq_along(yearly_scope2$lat)) { 
+#   
+#   vector[i] <- search_radius(as.numeric(yearly_scope2$lat[i]), as.numeric(yearly_scope2$lon[i]), radius = 10)$zipcode[1]
+#   }
+# 
+# yearly_scope2 <- cbind(yearly_scope2, vector)
 ```

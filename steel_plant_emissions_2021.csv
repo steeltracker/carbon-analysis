@@ -16,6 +16,7 @@ SUS00016,1005283,SSAB Americas Alabama steel plant,30.941783, -88.012437,"12400 
 SUS00037,1010763,Outokumpu Stainless USA steel plant,31.148179, -87.988660,"1 Steel Dr., Calvert, Alabama, 36513-1300, United States",543328.26,207193,336135.26
 SUS00077,1006906,CMC Tennessee steel plant,35.978104, -83.956572,"1919 Tennessee Avenue, Knoxville, TN 37921, United States",334301.02,89981,244320.02
 SUS00027,1003093,Nucor Steel Memphis plant,35.048395, -90.163033,"3601 Paul R. Lowry Road, Memphis, Tennessee 38109, United States",552819.9,152656,400163.9
+SUS00020,1005163,BlueScope North Star Steel plant,41.568783, -84.048129,"6767 County Road 9, Delta, Ohio 43515, United States",1089209.38,303106,786103.38
 SUS00018,1013051,JSW Steel USA Ohio plant,40.314891, -80.605553,"1500 Commercial Avenue, Mingo Junction, Ohio 43938, United States",598776.27,75391,523385.27
 SUS00070,1003474,Charter Steel Cleveland plant,41.443147, -81.659911,"4300 East 49th Street, Cuyahoga Heights, OH 44125, United States",368983.58,143123,225860.58
 SUS00057,1002768,Vallourec Star Youngstown steel plant,41.125495, -80.683382,"2669 Martin Luther King Jr. Blvd, Youngstown, OH 44510-1033, USA",390694.93,148542,242152.93
@@ -48,17 +49,10 @@ SUS00068,1005755,Cascade Steel Rolling Mills,45.228035, -123.163599,"3200 NE Hig
 SUS00035,1000029,Nucor Steel Seattle plant,47.569597, -122.367395,"2424 SW Andover Street, Seattle, Washington 98106, United States",428431.36,97512,330919.36
 SUS00002,1003268,Cleveland-Cliffs Butler steel plant,40.845524, -79.921452,"1 Armco Dr, Lyndora, PA 16045-1065, United States",274475.15,35074,239401.15
 SUS00007,1003668,Cleveland-Cliffs Coatesville steel plant,39.977819, -75.824512,"139 Modena Road, Coatesville, PA 19230, United States",340990.94,149470,191520.94
-SUS00009,NA,Cleveland-Cliffs Indiana Harbor steel plant,41.669553, -87.438429,"3210 Watling St., East Chicago, IN 46312, United States",NA,NA,161481.39
 SUS00015,1000394,Gerdau Petersburg Steel Mill,37.181168, -77.449517,"25801 Hofheimer Way, Petersburg, Virginia 23805, United States",473629.15,140045,333584.15
 SUS00019,1002977,North American Stainless steel plant,38.725418, -85.076015,"6870 Highway 42 East, Ghent, Kentucky, 41045-9615, United States",819745.56,352251,467494.56
-SUS00020,NA,BlueScope North Star Steel plant,41.568783, -84.048129,"6767 County Road 9, Delta, Ohio 43515, United States",NA,NA,786103.38
-SUS00020-1,NA,BlueScope North Star Steel plant EAF expansion,41.568783, -84.048129,"6767 County Road 9, Delta, Ohio 43515, United States",NA,NA,306087
 SUS00025,1007642,Nucor Steel Hickman plant,35.901162, -89.776190,"5929 East State Highway 18, Armorel, Arkansas 72315, United States",1183980.9,454106,729874.9
-SUS00029,NA,Nucor Steel Gallatin plant,38.759878, -84.996204,"4831 U.S. Hwy 42 W, Ghent, Kentucky 41405, United States",NA,NA,424251.29
-SUS00029-1,NA,Nucor Steel Gallatin plant EAF expansion,38.759878, -84.996204,"4831 U.S. Hwy 42 W, Ghent, Kentucky 41405, United States",NA,NA,371366.03
+SUS00029,1005700,Nucor Steel Gallatin plant,38.759878, -84.996204,"4831 U.S. Hwy 42 W, Ghent, Kentucky 41405, United States",643261.29,219010,424251.29
 SUS00032,1007921,Nucor-Yamato Steel Blytheville plant,35.941421, -89.713819,"7301 East County Road 142, Blytheville, Arkansas 72315, United States",1651085.88,469008,1182077.88
-SUS00036,NA,Nucor Steel Brandenburg plant,37.9999454, -86.1398738,"Buttermilk Falls Industrial Park, Brandenburg, Kentucky, United States",NA,NA,318188.51
 SUS00042,1004616,Steel Dynamics Columbus plant,33.447580, -88.572683,"1945 Airport Road / P.O. Box 1467, Columbus, Mississippi 39701, United States",2102209.32,575209,1527000.32
-SUS00043,NA,Steel Dynamics Sinton plant,28.051820, -97.488040,"Sinton, Texas, United States",NA,NA,962472.73
-SUS00058,NA,Optimus Steel Beaumont plant,30.08201, -94.074694,"PO BOX 3869, Beaumont, TX 77704, United States",NA,NA,208535.69
-SUS00061,1001699,Liberty Steel Georgetown plant,33.367258, -79.292515,"420 S Hazard St, Georgetown, SC 29440, United States",NA,NA,302894.4
+SUS00058,1007348,Optimus Steel Beaumont plant,30.08201, -94.074694,"PO BOX 3869, Beaumont, TX 77704, United States",280072.69,71537,208535.69
