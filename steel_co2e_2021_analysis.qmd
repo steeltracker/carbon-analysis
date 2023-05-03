@@ -226,11 +226,13 @@ AISI_longer <- AISI_data %>%
 ## Converting to per thousand tons for weekly co2e
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
-         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 52)
-         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne)) %>% 
+         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 48)
+         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne))
+
+scope2_plant_emissions_long_rounded <- scope2_plant_emissions_long %>% 
   mutate_if(is.numeric, round, 2)
 
-scope2_plant_emissions_wide <- scope2_plant_emissions_long %>% 
+scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>% 
   select(-utilization) %>% 
   pivot_wider(names_from = week_end_date
            , values_from = scope2_co2e_tonnes_per_week)
@@ -340,11 +342,33 @@ scope_1_and_2_emissions_2021 <- scope_1_and_2_zipcode_matches %>%
   relocate(c(plant_id, lat, lon), .before = address) %>% 
   relocate(c(ghgrp_id, plant_name), .after = plant_id) %>% 
   mutate(co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address) %>% 
-  mutate_if(is.numeric, round, 2)
+  left_join(scope2_plant_emissions_long) %>% 
+  select(-c(week_end_date, utilization, emissions_intensity_co2e_tonne_per_tonne, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week)) %>% 
+  distinct() %>% 
+  mutate_if(is.numeric, round, 3) %>% 
+  relocate(c(eaf_capacity, co2e_tonnes_per_mwh, co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021), .after = region)
 ```
 
 ```{r}
-write_csv(scope_1_and_2_emissions_2021, here("steel_plant_emissions_2021.csv"))
+write_csv(scope_1_and_2_emissions_2021, here("annual_steel_plant_emissions_2021.csv"))
+```
+
+### Weekly scope 1 and scope 2 values
+
+```{r}
+weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021, scope2_plant_emissions_long) %>% 
+  mutate(scope1_weekly = (scope1_co2e_tonnes_2021/48)
+         , total_weekly_co2e_tonnes = scope1_weekly + scope2_co2e_tonnes_per_week) %>% 
+  select(-c(co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021))
+
+weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
+  select(-c(utilization, scope2_co2e_tonnes_per_week)) %>% 
+  pivot_wider(names_from = week_end_date
+           , values_from = total_weekly_co2e_tonnes)
+```
+
+```{r}
+write_csv(weekly_scope_1_and_2_wide, here("weekly_steel_plant_emissions_2021.csv"))
 ```
 
 ## Code that we have tried throughout this document
