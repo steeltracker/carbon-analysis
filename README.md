@@ -30,8 +30,8 @@ The data folder contains all 5 datsets used to conduct the analysis. The analysi
 			iv.	aisi_2021_util_rate.xlsx
 			v.	flight_2021_scope1_emissions.xls
 		b.	analysis
-			i.	steel_carbon_analysis.R
-			ii.	steel_carbon_analsysis.ipynb
+			i.	steel_co2e_2021_analysis.R
+			ii.	steel_co2e_2021_analysis.ipynb
 		c.	output_data
 			i.	scope2_emissions_annual_weekly.csv
 			ii.	scope1_and_scope2_emissions_annual.csv

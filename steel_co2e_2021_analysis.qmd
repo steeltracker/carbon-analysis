@@ -336,12 +336,14 @@ corrected_ghgids <- remaining_zipcodes %>%
 ### Combining all of our data to get a final dataset with scope 1 and 2 values
 
 ```{r}
-scope_1_and_2_emissions_2021 <- scope_1_and_2_zipcode_matches %>% 
+scope_1_and_2_emissions_2021_prestep <- scope_1_and_2_zipcode_matches %>% 
   full_join(corrected_ghgids) %>% 
   select(-zip_code) %>% 
   relocate(c(plant_id, lat, lon), .before = address) %>% 
   relocate(c(ghgrp_id, plant_name), .after = plant_id) %>% 
-  mutate(co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address) %>% 
+  mutate(co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address)
+
+scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>% 
   left_join(scope2_plant_emissions_long) %>% 
   select(-c(week_end_date, utilization, emissions_intensity_co2e_tonne_per_tonne, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week)) %>% 
   distinct() %>% 
@@ -356,10 +358,12 @@ write_csv(scope_1_and_2_emissions_2021, here("annual_steel_plant_emissions_2021.
 ### Weekly scope 1 and scope 2 values
 
 ```{r}
-weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021, scope2_plant_emissions_long) %>% 
+weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
   mutate(scope1_weekly = (scope1_co2e_tonnes_2021/48)
          , total_weekly_co2e_tonnes = scope1_weekly + scope2_co2e_tonnes_per_week) %>% 
-  select(-c(co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021))
+  select(-c(co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021)) %>% 
+  relocate(co2e_tonnes_per_mwh, .after = utilization) %>% 
+  mutate_if(is.numeric, round, 3)
 
 weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
   select(-c(utilization, scope2_co2e_tonnes_per_week)) %>% 
