@@ -322,7 +322,8 @@ corrected_ghgids <- remaining_zipcodes %>%
                               , plant_id == "SUS00019" ~ "1002977"
                               , plant_id == "SUS00025" ~ "1007642"
                               , plant_id == "SUS00032" ~ "1007921"
-                              , plant_id == "SUS00058" ~ "1007348")
+                              , plant_id == "SUS00058" ~ "1007348"
+                              , plant_id == "SUS00029" ~ "1005700")
          , ghgrp_id = as.numeric(ghgrp_id)
          ) %>% 
   left_join(scope1, by = "ghgrp_id") %>% 
