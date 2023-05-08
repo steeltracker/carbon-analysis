@@ -13,6 +13,7 @@ Approximately 70% of steel produced in the US is from electrified steel plants w
 #### 2. Download and unzip the data folder and save the data in the following folder path: carbon-analysis/data/. Two of the five datasets, EPA flight data and eGrid data can be downloaded directly from the repo. The eGrid shape file is too large so it must be downloaded from the link provided below. The AISI data requires one to reach out and the GEM data requires one to complete a quick form to track the users. You can also find the links to the datasets below:
 
 ##### AISI (American Iron and Steel Institute): Contact Caitlin Swalec at *caitlin.swalec@globalenergymonitor.org* to obtain data
+###### - Date of Data Collection: January 2023
 ###### - Number of variables: 33
 ###### - Number of rows: 109
 ###### - List of variables used from the dataset: Great Lakes region capacity utilization, Midwest region capacity utilization, Southern region capacity utilization, Western region capacity utilization, North East region capacity utilization
