@@ -237,7 +237,7 @@ scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>%
 ```
 
 ```{r, include=FALSE}
-# write_csv(scope_1_and_2_emissions_2021, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
+# write_csv(scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
 ```
 
 ### Finding Scope 2 values for the complete 2021 year
