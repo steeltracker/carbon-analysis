@@ -49,6 +49,7 @@ gem_data_readin <- readxl::read_excel(here("..", "data", "GEM_2022_data.xlsx"), 
 ### Filtering to only look at plants and data that we are interested in
 
 ```{r}
+## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes
 gem_data <- gem_data_readin %>% 
   filter(country == "United States"
          , status == "operating"
@@ -58,7 +59,9 @@ gem_data <- gem_data_readin %>%
   mutate(plant_name = plant_name_english
          , state = subnational_unit_province_state
          , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
-         , address = location_address) %>%
+         , address = location_address
+         , eaf_capacity_tonnes_of_steel_per_year = eaf_capacity * 1000) %>%
+  select(-eaf_capacity) %>% 
   select(plant_id
          , plant_name
          , owner
@@ -68,7 +71,7 @@ gem_data <- gem_data_readin %>%
          , status
          , start_date
          , plant_age_years
-         , eaf_capacity
+         , eaf_capacity_tonnes_of_steel_per_year
          , municipality
          , address)
 ```
@@ -220,12 +223,12 @@ AISI_longer <- AISI_data %>%
 ### Finding Weekly Scope 2 values
 
 ```{r}
-## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes per week
 ## Converting to per thousand tons for weekly co2e
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
-         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity * 1000) / 48)
-         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne))
+         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity_tonnes_of_steel_per_year) / 48)
+         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne)) %>% 
+  relocate(eaf_capacity_tonnes_of_steel_per_year, .before = eaf_capacity_tonnes_of_steel_per_week)
 
 scope2_plant_emissions_long_rounded <- scope2_plant_emissions_long %>% 
   mutate_if(is.numeric, round, 2)
@@ -234,10 +237,6 @@ scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>%
   select(-utilization) %>% 
   pivot_wider(names_from = week_end_date
            , values_from = scope2_co2e_tonnes_per_week)
-```
-
-```{r, include=FALSE}
-# write_csv(scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
 ```
 
 ### Finding Scope 2 values for the complete 2021 year
@@ -350,19 +349,15 @@ scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>%
   select(-c(week_end_date, utilization, emissions_intensity_co2e_tonne_per_tonne, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week)) %>% 
   distinct() %>% 
   mutate_if(is.numeric, round, 3) %>% 
-  relocate(c(eaf_capacity, co2e_tonnes_per_mwh, co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021), .after = region)
-```
-
-```{r, include=FALSE}
-# write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope2_steel_plant_emissions_2021.csv"))
+  relocate(c(eaf_capacity_tonnes_of_steel_per_year, co2e_tonnes_per_mwh, co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021), .after = region)
 ```
 
 ### Weekly scope 1 and scope 2 values
 
 ```{r}
 weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
-  mutate(scope1_weekly = (scope1_co2e_tonnes_2021/48)
-         , total_weekly_co2e_tonnes = scope1_weekly + scope2_co2e_tonnes_per_week) %>% 
+  mutate(scope1_tonnes_of_co2e_per_week = (scope1_co2e_tonnes_2021/48)
+         , total_weekly_co2e_tonnes = scope1_tonnes_of_co2e_per_week + scope2_co2e_tonnes_per_week) %>% 
   select(-c(co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021)) %>% 
   relocate(co2e_tonnes_per_mwh, .after = utilization) %>% 
   mutate_if(is.numeric, round, 3)
@@ -374,7 +369,15 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
 ```
 
 ```{r, include=FALSE}
-# write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
+write_csv(scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
+```
+
+```{r, include=FALSE}
+write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope2_steel_plant_emissions_2021.csv"))
+```
+
+```{r, include=FALSE}
+write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
 
 <br>
