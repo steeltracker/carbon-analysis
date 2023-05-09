@@ -236,6 +236,10 @@ scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>%
            , values_from = scope2_co2e_tonnes_per_week)
 ```
 
+```{r, include=FALSE}
+# write_csv(scope_1_and_2_emissions_2021, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
+```
+
 ### Finding Scope 2 values for the complete 2021 year
 
 ```{r}
@@ -350,7 +354,7 @@ scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>%
 ```
 
 ```{r, include=FALSE}
-write_csv(scope_1_and_2_emissions_2021, here("..", "annual_steel_plant_emissions_2021.csv"))
+# write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
 
 ### Weekly scope 1 and scope 2 values
@@ -370,8 +374,10 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
 ```
 
 ```{r, include=FALSE}
-write_csv(weekly_scope_1_and_2_wide, here("..", "weekly_steel_plant_emissions_2021.csv"))
+# write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
+
+<br>
 
 ## Code that we have tried throughout this document
 
