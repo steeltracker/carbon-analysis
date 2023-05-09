@@ -2,18 +2,16 @@
 title: "state_emissions_per_plant"
 format: html
 editor: visual
+author: "Amrit Sandhu, Erica Bishop, Michael Zargari, and Ruth Enriquez"
 ---
 
 ### Loading Libraries
 
 ```{r, message=FALSE}
-library(terra)
 library(sf)
-library(raster)
 library(here)
 library(janitor)
 library(tidyverse)
-library(tmap)
 library(rmapshaper)
 ```
 
@@ -28,9 +26,9 @@ egrid2021_data <- readxl::read_excel(here("..", "data", "eGRID2021_data.xlsx"), 
 ### Standardizing state names and cleaning up rows
 
 ```{r}
-## Editing egrid data to be how we would like to use it
+## Cleaning egrid data for usability
 emissions_by_subregion <- egrid2021_data %>%
-  mutate(co2e_lbs_per_mwh = as.numeric(e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
+  mutate(co2e_lbs_per_mwh = as.numeric (e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
          , subregion_name = e_grid_subregion_name
          , co2e_tonnes_per_mwh = co2e_lbs_per_mwh / 2204.62262185) %>%
