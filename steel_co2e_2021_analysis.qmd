@@ -21,7 +21,7 @@ library(rmapshaper)
 
 ```{r}
 ## Importing grid region electricity values
-egrid2021_data <- readxl::read_excel(here("data", "eGRID2021_data.xlsx"), sheet = "SRL21") %>%
+egrid2021_data <- readxl::read_excel(here("..", "data", "eGRID2021_data.xlsx"), sheet = "SRL21") %>%
   clean_names()
 ```
 
@@ -44,7 +44,7 @@ emissions_by_subregion <- emissions_by_subregion[-1,]
 ### Importing GEM data
 
 ```{r}
-gem_data_readin <- readxl::read_excel(here("data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
+gem_data_readin <- readxl::read_excel(here("..", "data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
   clean_names()
 ```
 
@@ -130,13 +130,13 @@ plant_emissions_by_subregion <- left_join(plant_capacity, emissions_by_subregion
 ### Importing AISI data
 
 ```{r, message=FALSE}
-AISI_regions_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
+AISI_regions_readin <- readxl::read_excel(here("..", "data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
   clean_names()
 
 # AISI_city_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Region by City") %>% 
 #   clean_names()
 
-AISI_data_readin <- readxl::read_excel(here("data", "AISI_data.xlsx"), sheet = "AISI Production Values") %>% 
+AISI_data_readin <- readxl::read_excel(here("..", "data", "AISI_data.xlsx"), sheet = "AISI Production Values") %>% 
   clean_names()
 ```
 
@@ -276,7 +276,7 @@ unique_scope2_zip_codes <- checking_unique_zipcodes_scope2 %>%
 ### Reading in Greenhouse Gas Emissions data (scope 1)
 
 ```{r}
-scope1_readin <- readxl::read_excel(here("data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
+scope1_readin <- readxl::read_excel(here("..", "data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
   clean_names()
 
 scope1 <- scope1_readin %>% 
@@ -351,8 +351,8 @@ scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>%
   relocate(c(eaf_capacity, co2e_tonnes_per_mwh, co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021), .after = region)
 ```
 
-```{r}
-write_csv(scope_1_and_2_emissions_2021, here("annual_steel_plant_emissions_2021.csv"))
+```{r, include=FALSE}
+write_csv(scope_1_and_2_emissions_2021, here("..", "annual_steel_plant_emissions_2021.csv"))
 ```
 
 ### Weekly scope 1 and scope 2 values
@@ -371,8 +371,8 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
            , values_from = total_weekly_co2e_tonnes)
 ```
 
-```{r}
-write_csv(weekly_scope_1_and_2_wide, here("weekly_steel_plant_emissions_2021.csv"))
+```{r, include=FALSE}
+write_csv(weekly_scope_1_and_2_wide, here("..", "weekly_steel_plant_emissions_2021.csv"))
 ```
 
 ## Code that we have tried throughout this document
