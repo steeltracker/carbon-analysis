@@ -223,7 +223,6 @@ AISI_longer <- AISI_data %>%
 ### Finding Weekly Scope 2 values
 
 ```{r}
-## Converting to per thousand tons for weekly co2e
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity_tonnes_of_steel_per_year) / 48)
@@ -355,6 +354,19 @@ scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>%
 ### Weekly scope 1 and scope 2 values
 
 ```{r}
+## Finding weekly scope 2 values first
+weekly_scope2_plant_emissions_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
+  select(-c(co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021)) %>% 
+  relocate(co2e_tonnes_per_mwh, .after = utilization) %>% 
+  mutate_if(is.numeric, round, 3)
+
+weekly_scope2_plant_emissions_wide <- weekly_scope2_plant_emissions_long %>%
+  select(-c(utilization)) %>% 
+  pivot_wider(names_from = week_end_date
+           , values_from = scope2_co2e_tonnes_per_week)
+```
+
+```{r}
 weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
   mutate(scope1_tonnes_of_co2e_per_week = (scope1_co2e_tonnes_2021/48)
          , total_weekly_co2e_tonnes = scope1_tonnes_of_co2e_per_week + scope2_co2e_tonnes_per_week) %>% 
@@ -368,8 +380,10 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
            , values_from = total_weekly_co2e_tonnes)
 ```
 
+## Downloading Data
+
 ```{r, include=FALSE}
-write_csv(scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
+write_csv(weekly_scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
 ```
 
 ```{r, include=FALSE}
@@ -379,8 +393,6 @@ write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope
 ```{r, include=FALSE}
 write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
-
-<br>
 
 ## Code that we have tried throughout this document
 
