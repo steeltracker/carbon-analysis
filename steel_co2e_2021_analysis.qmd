@@ -229,8 +229,8 @@ AISI_longer <- AISI_data %>%
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity_tonnes_of_steel_per_year) / 48)
-         , scope2_co2e_tonnes_per_week = (eaf_capacity_tonnes_of_steel_per_week * utilization * emissions_intensity_co2e_tonne_per_tonne),
-         plant_production_tonnes_per_week = (utilization * eaf_capacity_tonnes_of_steel_per_week)) %>% 
+         , scope2_co2e_tonnes_per_week = (utilization * eaf_capacity_tonnes_of_steel_per_week * emissions_intensity_co2e_tonne_per_tonne),
+         ) %>% 
   relocate(eaf_capacity_tonnes_of_steel_per_year, .before = eaf_capacity_tonnes_of_steel_per_week)
 
 scope2_plant_emissions_long_rounded <- scope2_plant_emissions_long %>% 
@@ -247,8 +247,7 @@ scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>%
 ```{r}
 yearly_scope2 <- scope2_plant_emissions_long %>% 
   group_by(plant_id, plant_name, address, lat, lon) %>% 
-  summarize(scope2_co2e_tonnes_2021 = sum(scope2_co2e_tonnes_per_week),
-            annual_production_per_plant_tonnes_of_steel = sum(plant_production_tonnes_per_week)) %>% 
+  summarize(scope2_co2e_tonnes_2021 = sum(scope2_co2e_tonnes_per_week)) %>% 
   ungroup()
 ```
 
@@ -350,11 +349,10 @@ scope_1_and_2_emissions_2021_prestep <- scope_1_and_2_zipcode_matches %>%
 
 scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>% 
   left_join(scope2_plant_emissions_long) %>% 
-  select(-c(week_end_date, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week,
-            )) %>% 
+  select(-c(week_end_date, utilization, emissions_intensity_co2e_tonne_per_tonne, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week)) %>% 
   distinct() %>% 
   mutate_if(is.numeric, round, 3) %>% 
-  relocate(c(eaf_capacity_tonnes_of_steel_per_year, co2e_tonnes_per_mwh, total_co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021), .after = region)
+  relocate(c(eaf_capacity_tonnes_of_steel_per_year, co2e_tonnes_per_mwh, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021, total_co2e_tonnes_2021), .after = region)
 ```
 
 ### Weekly scope 1 and scope 2 values
@@ -385,6 +383,31 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
   pivot_wider(names_from = week_end_date
            , values_from = total_weekly_co2e_tonnes)
 ```
+
+## Data Analysis
+```{r}
+total_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(region) %>% 
+  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(total_emissions_co2e))
+  
+average_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(region) %>% 
+  summarise(avg_emissions_per_region_co2e = mean(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(avg_emissions_per_region_co2e))
+
+total_state_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(state) %>% 
+  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(total_emissions_co2e))
+  
+average_state_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(state) %>% 
+  summarise(avg_emissions_per_plant_co2e = mean(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(avg_emissions_per_plant_co2e))
+```
+
+
 
 ## Downloading Data
 
