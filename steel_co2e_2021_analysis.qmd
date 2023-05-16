@@ -385,6 +385,8 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
 ```
 
 ## Data Analysis
+
+### Regional Analysis
 ```{r}
 total_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
   group_by(region) %>% 
@@ -395,7 +397,10 @@ average_regional_emissions <- scope_1_and_2_emissions_2021 %>%
   group_by(region) %>% 
   summarise(avg_emissions_per_region_co2e = mean(total_co2e_tonnes_2021)) %>% 
   arrange(desc(avg_emissions_per_region_co2e))
+```
 
+### State-Level Analysis
+```{r}
 total_state_emissions <- scope_1_and_2_emissions_2021 %>% 
   group_by(state) %>% 
   summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
