@@ -417,15 +417,28 @@ average_state_emissions <- scope_1_and_2_emissions_2021 %>%
 ## Downloading Data
 
 ```{r, include=FALSE}
+## Weekly scope 2
 write_csv(weekly_scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
 ```
 
 ```{r, include=FALSE}
+## Total annual scope 1 and 2
 write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
 
 ```{r, include=FALSE}
+## Weekly scope 1 and 2
 write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
+```
+
+```{r}
+## Weekly scope 1 and 2 long
+write_csv(weekly_scope_1_and_2_long, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021_long.csv"))
+```
+
+```{r}
+## Weekly scope 2 long
+write_csv(weekly_scope2_plant_emissions_long, here("output-data", "weekly_scope2_plant_emissions_2021_long.csv"))
 ```
 
 ```{r}
