@@ -427,3 +427,8 @@ write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope
 ```{r, include=FALSE}
 write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
+
+```{r}
+
+```
+
