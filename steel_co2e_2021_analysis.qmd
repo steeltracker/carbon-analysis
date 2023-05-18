@@ -1,7 +1,6 @@
 ---
 title: "state_emissions_per_plant"
 format: html
-editor: visual
 author: "Amrit Sandhu, Erica Bishop, Michael Zargari, and Ruth Enriquez"
 ---
 
@@ -17,8 +16,7 @@ library(rmapshaper)
 
 ### Importing eGrid Data
 
-The EPA eGrida Data, which was available for 2021 at the time of download, contains the emissions intensity of electricity produced in each sub region.
-For this analysis, we assume that each steel plant is drawing 100% of its electricity from the grid (and the eGrid subregion that it is located within).
+The EPA eGrida Data, which was available for 2021 at the time of download, contains the emissions intensity of electricity produced in each sub region. For this analysis, we assume that each steel plant is drawing 100% of its electricity from the grid (and the eGrid subregion that it is located within).
 
 ```{r}
 ## Importing grid region electricity values
@@ -29,7 +27,7 @@ egrid2021_data <- readxl::read_excel(here("..", "data", "eGRID2021_data.xlsx"), 
 egrid2021_data <- egrid2021_data[-1,]
 ```
 
-### Standardizing state names and cleaning up rows
+### Standardizing state names and cleaning up rows in eGrid data
 
 ```{r}
 ## Cleaning egrid data for usability
@@ -53,7 +51,7 @@ gem_data_readin <- readxl::read_excel(here("..", "data", "GEM_2022_data.xlsx"), 
 
 ```{r}
 ## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes
-gem_data <- gem_data_readin %>% 
+gem_data_cleaned <- gem_data_readin %>% 
   filter(country == "United States"
          , status == "operating"
          , nominal_eaf_steel_capacity_ttpa != "N/A"
@@ -63,7 +61,7 @@ gem_data <- gem_data_readin %>%
          , state = subnational_unit_province_state
          , eaf_capacity = as.numeric(nominal_eaf_steel_capacity_ttpa)
          , address = location_address
-         , eaf_capacity_tonnes_of_steel_per_year = eaf_capacity * 1000) %>%
+         , max_tonnes_of_steel_producible_annually = eaf_capacity * 1000) %>%
   select(-eaf_capacity) %>% 
   select(plant_id
          , plant_name
@@ -74,24 +72,23 @@ gem_data <- gem_data_readin %>%
          , status
          , start_date
          , plant_age_years
-         , eaf_capacity_tonnes_of_steel_per_year
+         , max_tonnes_of_steel_producible_annually
          , municipality
-         , address)
-```
+         , address
+         , category_steel_product
+         , steel_products
+         , responsible_steel_certification)
 
-### Only selecting columns we need for now
-
-```{r}
-plant_capacity <- gem_data %>% 
+## Only selecting columns we need
+gem_data <- gem_data_cleaned %>% 
   select(-c(country
-         , owner
          , start_date
-         , plant_age_years
-         , status)) %>% 
+         , status
+         , responsible_steel_certification)) %>% 
   separate(coordinates, c("lat", "lon"), remove = TRUE, ",")
 ```
 
-### Finding where plants are located in subregions
+### Finding where plants are located in subregions and merging those with the gem_data
 
 ```{r}
 ## Reading in data
@@ -103,7 +100,7 @@ subregion_shapes_raw <- read_sf(here("..", "data", "egrid2020_subregions", "eGRI
 subregion_shapes <- ms_simplify(subregion_shapes_raw, keep = 0.0005)
 
 ## Bringing in our points
-plant_points <- st_geometry(st_as_sf(plant_capacity, coords = c("lon", "lat"))) %>% 
+plant_points <- st_geometry(st_as_sf(gem_data, coords = c("lon", "lat"))) %>% 
   st_set_crs("WGS84")
 
 ## Plotting to make sure that we have overlaps
@@ -121,14 +118,11 @@ for (i in seq_along(overlap)) {
 }
 
 ## Adding column
-plant_capacity <- plant_capacity %>% 
+gem_data <- gem_data %>% 
   mutate(subregion = subregion_vector)
-```
 
-### Merging data
-
-```{r}
-plant_emissions_by_subregion <- left_join(plant_capacity, emissions_by_subregion, by = "subregion")
+## Merging Data
+plant_emissions_by_subregion <- left_join(gem_data, emissions_by_subregion, by = "subregion")
 ```
 
 ### Importing AISI data
@@ -154,12 +148,14 @@ S = Southern
 
 W = Western
 
+### Filtering AISI data, renaming columns, and selecting the weekly data and utilization rates we need
+
 ```{r}
 AISI_regions <- AISI_regions_readin %>% 
   filter(steel_plant_in_gspt == "yes")
 
 AISI_data <- AISI_data_readin %>% 
-  mutate(week_end_date = week_end_date_1
+  rename(week_end_date = week_end_date_1
          , NE_util = north_east_region_capacity_utilization
          , GL_util = great_lakes_region_capacity_utilization
          , MW_util = midwest_region_capacity_utilization
@@ -176,7 +172,7 @@ AISI_data <- AISI_data_readin %>%
 AISI_data <- AISI_data[-1,]
 ```
 
-### Merging All Data
+### Merging all of our data so far
 
 ```{r}
 regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions, by = "state") %>% 
@@ -201,7 +197,7 @@ regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions
                             , TRUE ~ as.character(region)))
 ```
 
-### Emissions Intensity
+### Defining carbon intensity for eaf steel production and preparing data to calculate intensities
 
 ```{r}
 ## co2e_tonnes_per_mwh is from eGrid and is pounds of CO2e per MWH of electricity produced per grid location (not regional location)
@@ -210,7 +206,7 @@ regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions
 ## MWH per tonne of steel
 eaf_MWH_per_tonne <- 710 / 1000
 
-## emissions_intensity is pounds of CO2e per tonne of steel (the amount of co2e produced for every tonne of steel produced)
+## emissions_intensity is tonnes of CO2e per tonne of steel (the amount of co2e produced for every tonne of steel produced)
 
 AISI_longer <- AISI_data %>% 
   pivot_longer(cols = c(NE_util, GL_util, MW_util, S_util, W_util)
@@ -223,16 +219,17 @@ AISI_longer <- AISI_data %>%
                    , region == "W_util" ~ "Western"))
 ```
 
-### Finding Weekly Scope 2 values
+### Finding Weekly Scope 2 co2e values and putting it in long and wide format
 
 ```{r}
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
-  mutate(emissions_intensity_co2e_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
-         , eaf_capacity_tonnes_of_steel_per_week = ((eaf_capacity_tonnes_of_steel_per_year) / 48)
-         , scope2_co2e_tonnes_per_week = (utilization * eaf_capacity_tonnes_of_steel_per_week * emissions_intensity_co2e_tonne_per_tonne),
+  mutate(estimated_emissions_intensity_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
+         , max_tonnes_of_steel_producible_weekly = ((max_tonnes_of_steel_producible_annually) / 48)
+         , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne),
          ) %>% 
-  relocate(eaf_capacity_tonnes_of_steel_per_year, .before = eaf_capacity_tonnes_of_steel_per_week)
+  relocate(max_tonnes_of_steel_producible_annually, .before = max_tonnes_of_steel_producible_weekly)
 
+## Rounding the data
 scope2_plant_emissions_long_rounded <- scope2_plant_emissions_long %>% 
   mutate_if(is.numeric, round, 2)
 
@@ -251,7 +248,7 @@ yearly_scope2 <- scope2_plant_emissions_long %>%
   ungroup()
 ```
 
-### Extracting zip codes
+### Extracting zip codes to find matches with addresses
 
 ```{r}
 ## Extracting zip code from address
@@ -277,7 +274,7 @@ unique_scope2_zip_codes <- checking_unique_zipcodes_scope2 %>%
   left_join(zipcode_extraction, by = "zip_code")
 ```
 
-### Reading in Greenhouse Gas Emissions data (scope 1)
+### Reading in Greenhouse Gas Emissions data (scope 1) and extracting the non-repeating zip codes
 
 ```{r}
 scope1_readin <- readxl::read_excel(here("..", "data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
@@ -300,7 +297,7 @@ unique_scope1_zipcodes <- checking_unique_zipcodes_scope1 %>%
   left_join(scope1, by = "zip_code")
 ```
 
-### Joining scope 1 and scope 2 zip codes
+### Joining scope 1 and scope 2 unique zip codes
 
 ```{r}
 ## Manually checked zip codes and addresses and plant names and the following are for sure a match
@@ -312,13 +309,13 @@ scope_1_and_2_zipcode_matches <- unique_scope1_zipcodes %>%
   relocate(plant_name, .after = address)
 ```
 
-### Anti-Joining to find remaining zip codes
+### Anti-Joining to find remaining zip codes that had not matched and manually matching them
 
 ```{r}
 remaining_zipcodes <-  zipcode_extraction %>% 
   anti_join(scope_1_and_2_zipcode_matches, by = "zip_code")
 
-## Making sure zip codes match if they are in 
+## Correctly matching the zip codes and assigning the plant id equivalents between both datasets 
 corrected_ghgids <- remaining_zipcodes %>% 
   mutate(ghgrp_id = case_when(plant_id == "SUS00002" ~ "1003268"
                               , plant_id == "SUS00007" ~ "1003668"
@@ -337,7 +334,7 @@ corrected_ghgids <- remaining_zipcodes %>%
   rename(scope1_co2e_tonnes_2021 = ghg_quantity_metric_tons_co2e)
 ```
 
-### Combining all of our data to get a final dataset with scope 1 and 2 values
+### Combining all of our data to get a final dataset with scope 1 and 2 2021 values
 
 ```{r}
 scope_1_and_2_emissions_2021_prestep <- scope_1_and_2_zipcode_matches %>% 
@@ -345,17 +342,17 @@ scope_1_and_2_emissions_2021_prestep <- scope_1_and_2_zipcode_matches %>%
   select(-zip_code) %>% 
   relocate(c(plant_id, lat, lon), .before = address) %>% 
   relocate(c(ghgrp_id, plant_name), .after = plant_id) %>% 
-  mutate(total_co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address) #making clear that its the sum
+  mutate(total_co2e_tonnes_2021 = scope1_co2e_tonnes_2021 + scope2_co2e_tonnes_2021, .after = address)
 
 scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>% 
   left_join(scope2_plant_emissions_long) %>% 
-  select(-c(week_end_date, utilization, emissions_intensity_co2e_tonne_per_tonne, eaf_capacity_tonnes_of_steel_per_week, scope2_co2e_tonnes_per_week)) %>% 
+  select(-c(week_end_date, utilization, estimated_emissions_intensity_tonne_per_tonne, max_tonnes_of_steel_producible_weekly, scope2_co2e_tonnes_per_week)) %>% 
   distinct() %>% 
   mutate_if(is.numeric, round, 3) %>% 
-  relocate(c(eaf_capacity_tonnes_of_steel_per_year, co2e_tonnes_per_mwh, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021, total_co2e_tonnes_2021), .after = region)
+  relocate(c(max_tonnes_of_steel_producible_annually, co2e_tonnes_per_mwh, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021, total_co2e_tonnes_2021), .after = region)
 ```
 
-### Weekly scope 1 and scope 2 values
+### Adding on the matched columns and id numbers onto our scope 2 data
 
 ```{r}
 ## Finding weekly scope 2 values first
@@ -370,6 +367,7 @@ weekly_scope2_plant_emissions_wide <- weekly_scope2_plant_emissions_long %>%
            , values_from = scope2_co2e_tonnes_per_week)
 ```
 
+### Making our annual 2021 data into weekly to see breakdown of weekly co2e productions that include scope 1 AND scope 2
 ```{r}
 weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
   mutate(scope1_tonnes_of_co2e_per_week = (scope1_co2e_tonnes_2021/48)
@@ -384,9 +382,47 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
            , values_from = total_weekly_co2e_tonnes)
 ```
 
+### Finding the amount of steel produced weekly and annually (_long and _wide denote datasets with weekly values)
+
+```{r}
+### Weekly -----
+plant_productions_long <- scope2_plant_emissions_long %>% 
+  mutate(tonnes_of_steel_produced = utilization * max_tonnes_of_steel_producible_weekly) %>% 
+  select(-scope2_co2e_tonnes_per_week)
+
+## Rounding the data
+plant_productions_long_rounded <- plant_productions_long %>% 
+  mutate_if(is.numeric, round, 3)
+
+## Amount of steel produced per week
+plant_productions_wide <- plant_productions_long_rounded %>% 
+  select(-utilization) %>%
+  pivot_wider(names_from = week_end_date
+           , values_from = tonnes_of_steel_produced)
+
+
+### 2021 Year ----
+## Amount of steel produced in 2021
+plant_productions_2021 <- plant_productions_long_rounded %>% 
+  select(-c(week_end_date, utilization)) %>% 
+  group_by_at(vars(-tonnes_of_steel_produced)) %>% 
+  summarize(total_tonnes_steel_produced_2021 = sum(tonnes_of_steel_produced)) %>% 
+  ungroup()
+```
+
+### Adding 2021 plant productions column next to yearly co2e columns
+```{r}
+total_steel_plant_emissions_and_productions_2021 <- left_join(plant_productions_2021, scope_1_and_2_emissions_2021) %>% 
+  relocate(ghgrp_id, .after = plant_id) %>% 
+  relocate(total_tonnes_steel_produced_2021, .after = total_co2e_tonnes_2021) %>% 
+  mutate(emissions_intensity_co2e_tonne_per_tonne = total_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .after = estimated_emissions_intensity_tonne_per_tonne)
+```
+
+
 ## Data Analysis
 
 ### Regional Analysis
+
 ```{r}
 total_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
   group_by(region) %>% 
@@ -400,6 +436,7 @@ average_regional_emissions <- scope_1_and_2_emissions_2021 %>%
 ```
 
 ### State-Level Analysis
+
 ```{r}
 total_state_emissions <- scope_1_and_2_emissions_2021 %>% 
   group_by(state) %>% 
@@ -412,33 +449,41 @@ average_state_emissions <- scope_1_and_2_emissions_2021 %>%
   arrange(desc(avg_emissions_per_plant_co2e))
 ```
 
-
-
 ## Downloading Data
 
+### Weekly scope 1 and 2 co2e wide
 ```{r, include=FALSE}
-## Weekly scope 2
-write_csv(weekly_scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
-```
-
-```{r, include=FALSE}
-## Total annual scope 1 and 2
-write_csv(scope_1_and_2_emissions_2021, here("output-data", "annual_scope1_scope2_steel_plant_emissions_2021.csv"))
-```
-
-```{r, include=FALSE}
-## Weekly scope 1 and 2
 write_csv(weekly_scope_1_and_2_wide, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
 
-```{r}
-## Weekly scope 1 and 2 long
+### Weekly scope 1 and 2 co2e long
+```{r, include=FALSE}
 write_csv(weekly_scope_1_and_2_long, here("output-data", "weekly_scope1_scope2_steel_plant_emissions_2021_long.csv"))
 ```
 
-```{r}
-## Weekly scope 2 long
+### Weekly scope 2 co2e wide
+```{r, include=FALSE}
+write_csv(weekly_scope2_plant_emissions_wide, here("output-data", "weekly_scope2_plant_emissions_2021.csv"))
+```
+
+### Weekly scope 2 co2e long
+```{r, include=FALSE}
 write_csv(weekly_scope2_plant_emissions_long, here("output-data", "weekly_scope2_plant_emissions_2021_long.csv"))
+```
+
+### Total annual productions and scope 1 and 2 co2e emissions
+```{r, include=FALSE}
+write_csv(total_steel_plant_emissions_and_productions_2021, here("output-data", "2021_steel_plant_emissions_and_productions.csv"))
+```
+
+### Weekly steel plant productions wide
+```{r}
+write_csv(plant_productions_wide, here("output-data", "weekly_steel_production.csv"))
+```
+
+### Weekly steel plant productions long
+```{r}
+write_csv(plant_productions_long, here("output-data", "weekly_steel_production_long.csv"))
 ```
 
 ```{r}
