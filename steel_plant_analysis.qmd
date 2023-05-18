@@ -45,10 +45,35 @@ average_state_emissions <- scope_1_and_2_emissions_2021 %>%
 ### Materials Analysis
 ```{r}
 types_of_steel_produced <- scope_1_and_2_emissions_2021 %>% 
-  select(c(plant_id, category_steel_product, steel_products, total_co2e_tonnes_2021, total_tonnes_steel_produced_2021)) %>% 
+  select(c(plant_id
+           , category_steel_product
+           , steel_products
+           , emissions_intensity_co2e_tonne_per_tonne
+           , total_co2e_tonnes_2021
+           , total_tonnes_steel_produced_2021
+           )) %>% 
   separate_rows(category_steel_product, sep = "; ")
 
 types_of_steel_produced %>% 
   group_by(category_steel_product) %>% 
   summarise(avg_pollution_at_plant = mean(total_co2e_tonnes_2021))
 ```
+
+### Regression Analysis
+```{r}
+steel_model <- lm(formula = total_co2e_tonnes_2021 ~ category_steel_product + total_tonnes_steel_produced_2021 + total_tonnes_steel_produced_2021*category_steel_product, data = types_of_steel_produced)
+
+summary(steel_model)
+```
+
+```{r}
+emissions_intensity_model <- lm(formula = total_co2e_tonnes_2021 ~ emissions_intensity_co2e_tonne_per_tonne + total_tonnes_steel_produced_2021 + total_tonnes_steel_produced_2021*emissions_intensity_co2e_tonne_per_tonne, data = types_of_steel_produced)
+
+summary(emissions_intensity_model)
+```
+
+### Correlation
+```{r}
+cor(types_of_steel_produced$total_co2e_tonnes_2021, types_of_steel_produced$emissions_intensity_co2e_tonne_per_tonne)
+```
+
