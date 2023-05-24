@@ -150,6 +150,8 @@ W = Western
 
 ### Filtering AISI data, renaming columns, and selecting the weekly data and utilization rates we need
 
+**Uilization is based on tonnage capability to produce raw steel for a sustained full order book.**
+
 ```{r}
 AISI_regions <- AISI_regions_readin %>% 
   filter(steel_plant_in_gspt == "yes")
@@ -167,9 +169,7 @@ AISI_data <- AISI_data_readin %>%
          , MW_util
          , S_util
          , W_util) %>% 
-  filter(week_end_date < "2022-01-01") ## Missing January 2021 data
-
-AISI_data <- AISI_data[-1,]
+  filter(week_end_date < "2022-01-01") ## Missing January 2021 data but we filled it in ourselves
 ```
 
 ### Merging all of our data so far
@@ -224,7 +224,7 @@ AISI_longer <- AISI_data %>%
 ```{r}
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(estimated_emissions_intensity_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
-         , max_tonnes_of_steel_producible_weekly = ((max_tonnes_of_steel_producible_annually) / 48)
+         , max_tonnes_of_steel_producible_weekly = ((max_tonnes_of_steel_producible_annually) / 52)
          , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne),
          ) %>% 
   relocate(max_tonnes_of_steel_producible_annually, .before = max_tonnes_of_steel_producible_weekly)
@@ -371,7 +371,7 @@ weekly_scope2_plant_emissions_wide <- weekly_scope2_plant_emissions_long %>%
 
 ```{r}
 weekly_scope_1_and_2_long <- left_join(scope_1_and_2_emissions_2021_prestep, scope2_plant_emissions_long) %>% 
-  mutate(scope1_tonnes_of_co2e_per_week = (scope1_co2e_tonnes_2021/48)
+  mutate(scope1_tonnes_of_co2e_per_week = (scope1_co2e_tonnes_2021/52)
          , total_weekly_co2e_tonnes = scope1_tonnes_of_co2e_per_week + scope2_co2e_tonnes_per_week) %>% 
   select(-c(total_co2e_tonnes_2021, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021)) %>% 
   relocate(co2e_tonnes_per_mwh, .after = utilization) %>% 
