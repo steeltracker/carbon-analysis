@@ -418,7 +418,7 @@ total_steel_plant_emissions_and_productions_2021 <- left_join(plant_productions_
   relocate(ghgrp_id, .after = plant_id) %>% 
   relocate(total_tonnes_steel_produced_2021, .after = total_co2e_tonnes_2021) %>% 
   mutate(emissions_intensity_co2e_tonne_per_tonne = total_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .after = estimated_emissions_intensity_tonne_per_tonne_scope2) %>%
-  mutate(estimated_emissions_intensity_tonne_per_tonne_scope1 = scope1_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .before = estimated_emissions_intensity_tonne_per_tonne_scope2) %>% 
+  mutate(estimated_emissions_intensity_tonne_per_tonne_scope1 = scope1_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .before = estimated_emissions_intensity_tonne_per_tonne_scope2) %>%
   mutate_if(is.numeric, round, 3)
 ```
 
