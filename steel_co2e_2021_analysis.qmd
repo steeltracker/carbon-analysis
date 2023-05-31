@@ -10,7 +10,7 @@ author: "Amrit Sandhu, Erica Bishop, Michael Zargari, and Ruth Enriquez"
 library(sf)
 library(here)
 library(janitor)
-library(tidyverse)
+library(tidyverse) ## dplyr, readr, stringr, tidyr, ggplot2
 library(rmapshaper)
 ```
 
@@ -223,9 +223,9 @@ AISI_longer <- AISI_data %>%
 
 ```{r}
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
-  mutate(estimated_emissions_intensity_tonne_per_tonne = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
+  mutate(estimated_emissions_intensity_tonne_per_tonne_scope2 = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , max_tonnes_of_steel_producible_weekly = ((max_tonnes_of_steel_producible_annually) / 52)
-         , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne),
+         , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne_scope2),
          ) %>% 
   relocate(max_tonnes_of_steel_producible_annually, .before = max_tonnes_of_steel_producible_weekly)
 
@@ -346,7 +346,7 @@ scope_1_and_2_emissions_2021_prestep <- scope_1_and_2_zipcode_matches %>%
 
 scope_1_and_2_emissions_2021 <- scope_1_and_2_emissions_2021_prestep %>% 
   left_join(scope2_plant_emissions_long) %>% 
-  select(-c(week_end_date, utilization, estimated_emissions_intensity_tonne_per_tonne, max_tonnes_of_steel_producible_weekly, scope2_co2e_tonnes_per_week)) %>% 
+  select(-c(week_end_date, utilization, estimated_emissions_intensity_tonne_per_tonne_scope2, max_tonnes_of_steel_producible_weekly, scope2_co2e_tonnes_per_week)) %>% 
   distinct() %>% 
   mutate_if(is.numeric, round, 3) %>% 
   relocate(c(max_tonnes_of_steel_producible_annually, co2e_tonnes_per_mwh, scope1_co2e_tonnes_2021, scope2_co2e_tonnes_2021, total_co2e_tonnes_2021), .after = region)
@@ -417,7 +417,8 @@ plant_productions_2021 <- plant_productions_long_rounded %>%
 total_steel_plant_emissions_and_productions_2021 <- left_join(plant_productions_2021, scope_1_and_2_emissions_2021) %>% 
   relocate(ghgrp_id, .after = plant_id) %>% 
   relocate(total_tonnes_steel_produced_2021, .after = total_co2e_tonnes_2021) %>% 
-  mutate(emissions_intensity_co2e_tonne_per_tonne = total_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .after = estimated_emissions_intensity_tonne_per_tonne) %>% 
+  mutate(emissions_intensity_co2e_tonne_per_tonne = total_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .after = estimated_emissions_intensity_tonne_per_tonne_scope2) %>%
+  mutate(estimated_emissions_intensity_tonne_per_tonne_scope1 = scope1_co2e_tonnes_2021 / total_tonnes_steel_produced_2021, .before = estimated_emissions_intensity_tonne_per_tonne_scope2) %>% 
   mutate_if(is.numeric, round, 3)
 ```
 
