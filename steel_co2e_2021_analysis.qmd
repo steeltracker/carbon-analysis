@@ -222,10 +222,11 @@ AISI_longer <- AISI_data %>%
 ### Finding Weekly Scope 2 co2e values and putting it in long and wide format
 
 ```{r}
+## Merging our two datasets based on the region column and defining new columns
 scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, by = "region") %>%
   mutate(estimated_emissions_intensity_tonne_per_tonne_scope2 = (co2e_tonnes_per_mwh * eaf_MWH_per_tonne)
          , max_tonnes_of_steel_producible_weekly = ((max_tonnes_of_steel_producible_annually) / 52)
-         , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne_scope2),
+         , scope2_co2e_tonnes_per_week = (utilization * max_tonnes_of_steel_producible_weekly * estimated_emissions_intensity_tonne_per_tonne_scope2)
          ) %>% 
   relocate(max_tonnes_of_steel_producible_annually, .before = max_tonnes_of_steel_producible_weekly)
 
@@ -233,6 +234,7 @@ scope2_plant_emissions_long <- left_join(regional_plant_emissions, AISI_longer, 
 scope2_plant_emissions_long_rounded <- scope2_plant_emissions_long %>% 
   mutate_if(is.numeric, round, 2)
 
+## Transferring each week to be its own column
 scope2_plant_emissions_wide <- scope2_plant_emissions_long_rounded %>% 
   select(-utilization) %>%
   pivot_wider(names_from = week_end_date
