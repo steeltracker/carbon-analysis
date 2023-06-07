@@ -16,7 +16,7 @@ library(rmapshaper)
 
 ### Importing eGrid Data
 
-The EPA eGrida Data, which was available for 2021 at the time of download, contains the emissions intensity of electricity produced in each sub region. For this analysis, we assume that each steel plant is drawing 100% of its electricity from the grid (and the eGrid subregion that it is located within).
+The EPA eGrid Data, which was available for 2021 at the time of download, contains the emissions intensity of electricity produced in each sub region. For this analysis, we assume that each steel plant is drawing 100% of its electricity from the grid (and the eGrid subregion that it is located within).
 
 ```{r}
 ## Importing grid region electricity values
@@ -41,6 +41,8 @@ emissions_by_subregion <- egrid2021_data %>%
 ```
 
 ### Importing GEM data
+
+The GEM data was provided by our client Caitlin Swalec and includes the plant names, locations, and plant capacities that we will be reviewing for the EAF steel plants.
 
 ```{r}
 gem_data_readin <- readxl::read_excel(here("..", "data", "GEM_2022_data.xlsx"), sheet = "Steel Plants") %>% 
@@ -90,6 +92,8 @@ gem_data <- gem_data_cleaned %>%
 
 ### Finding where plants are located in subregions and merging those with the gem_data
 
+The eGrid data loaded below includes the electric grid subregions that we will be looking at. We are find which points overlap which with regions and are assigning those overlaps as the assigned region.
+
 ```{r}
 ## Reading in data
 subregion_shapes_raw <- read_sf(here("..", "data", "egrid2020_subregions", "eGRID2020_subregions.shp")) %>% 
@@ -126,6 +130,10 @@ plant_emissions_by_subregion <- left_join(gem_data, emissions_by_subregion, by =
 ```
 
 ### Importing AISI data
+
+The American Iron and Steel Institute (AISI) is a trade association that represents the North American steel industry. It gathers and provides data related to steel production, consumption, trade, and other industry metrics. The AISI data covers various aspects of the steel industry, including information on steel production volumes, capacities, and utilization rates.
+
+We will be using these utilization rates in order to estimate the amount of steel produced per plant per week and per year.
 
 ```{r, message=FALSE}
 AISI_regions_readin <- readxl::read_excel(here("..", "data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
@@ -277,6 +285,8 @@ unique_scope2_zipcodes <- checking_unique_zipcodes_scope2 %>%
 ```
 
 ### Reading in Greenhouse Gas Emissions data (scope 1) and extracting the non-repeating zip codes
+
+The Greenhouse Gas Emissions data we are using includes emissions data of co2 equivalences from steel plants in the United States. We assume that this data is scope 1 and does not include any scope 2 sources. This data includes steel plant names, companies, locations, and emissions data.
 
 ```{r}
 scope1_readin <- readxl::read_excel(here("..", "data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
