@@ -272,7 +272,7 @@ checking_unique_zipcodes_scope2 <- zipcode_extraction %>%
   ungroup() %>% 
   select(zip_code)
 
-unique_scope2_zip_codes <- checking_unique_zipcodes_scope2 %>% 
+unique_scope2_zipcodes <- checking_unique_zipcodes_scope2 %>% 
   left_join(zipcode_extraction, by = "zip_code")
 ```
 
@@ -304,7 +304,7 @@ unique_scope1_zipcodes <- checking_unique_zipcodes_scope1 %>%
 ```{r}
 ## Manually checked zip codes and addresses and plant names and the following are for sure a match
 scope_1_and_2_zipcode_matches <- unique_scope1_zipcodes %>% 
-  right_join(unique_scope2_zip_codes, by = "zip_code") %>% 
+  right_join(unique_scope2_zipcodes, by = "zip_code") %>% 
   drop_na() %>% 
   rename(scope1_co2e_tonnes_2021 = ghg_quantity_metric_tons_co2e) %>% 
   relocate(address, .after = zip_code) %>% 
@@ -322,7 +322,6 @@ corrected_ghgids <- remaining_zipcodes %>%
   mutate(ghgrp_id = case_when(plant_id == "SUS00002" ~ "1003268"
                               , plant_id == "SUS00007" ~ "1003668"
                               , plant_id == "SUS00015" ~ "1000394"
-                              , plant_id == "SUS00061" ~ "1001699"
                               , plant_id == "SUS00042" ~ "1004616"
                               , plant_id == "SUS00019" ~ "1002977"
                               , plant_id == "SUS00025" ~ "1007642"
