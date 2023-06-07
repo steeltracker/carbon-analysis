@@ -78,13 +78,14 @@ If you have any questions, comments, or concerns, please reach out to a team mem
 *Affiliation: This project was carried out as a part of the Masters in Environmental Data Science program at UC Santa Barbara. The client for this project was [Global Energy Monitor(GEM)](https://globalenergymonitor.org/projects/global-steel-plant-tracker/), an organization dedicated to heavy industry decarbonization. The primary contact from GEM was Caitlin Swalec and the faculty advisor from the Bren School of Environment was Roland Geyer.*
 
 ## References 
-Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
 
-World Steel Association. World Steel in Figures 2022. https://worldsteel.org/steel-topics/statistics/world-steel-in-figures-2022/#major-steel-producing-countries-2021-and-2020.  
-
-Hasanbeigi, A. 2022. What is Green Steel? https://www.globalefficiencyintel.com/what-is-green-steel. 
+Emissions & Generation Resource Integrated Database (eGRID) https://www.epa.gov/egrid.
 
 Global Energy Monitor. Global Steel Plant Tracker. https://globalenergymonitor.org/projects/global-steel-plant-tracker/. 
 
-Emissions & Generation Resource Integrated Database (eGRID) https://www.epa.gov/egrid.
+Hasanbeigi, A. 2022. Steel Climate Impact. https://www.globalefficiencyintel.com/steel-climate-impact-international-benchmarking-energy-co2-intensities.
+
+Hasanbeigi, A. 2022. What is Green Steel? https://www.globalefficiencyintel.com/what-is-green-steel. 
+
+World Steel Association. World Steel in Figures 2022. https://worldsteel.org/steel-topics/statistics/world-steel-in-figures-2022/#major-steel-producing-countries-2021-and-2020.  
 
