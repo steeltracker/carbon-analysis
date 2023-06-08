@@ -45,7 +45,7 @@ Approximately 70% of steel produced in the US is from electrified steel plants w
 ###### - File name read in to analysis: egrid_2020_subregions.shp
 
 #### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
-The data is not stored within the repo, but can be accessed through the links and contacts listed above. The analysis folder has the R markdown and Python Notebook for calculating the Scope 2 emissiosn and emissions intensity. The summary folder contains a document summarizing some of the findings from these calculations. The output data is not stored in this repo, but it can also be requested from caitlin.swalec@globalenergymonitor.org. The deliverables folder contains the technical documentation of the project. The references folder includes the citations saved as pdfs. The references folder contains the Global Efficiency Intelligience report that contains the energy intensity value for EAF scrap steel production as well as a background report from Global Energy Monitor. Below is the structure of this repository: 
+The data is not stored within the repo, but can be accessed through the links and contacts listed above. The analysis folder has the R markdown and Python Notebook for calculating the Scope 2 emissiosn and emissions intensity. The summary folder contains a document summarizing some of the findings from these calculations. The output data is not stored in this repo, but it can also be requested from caitlin.swalec@globalenergymonitor.org. The deliverables folder contains the technical documentation of the project. The references folder includes the citations saved as pdfs. The references folder contains the Global Efficiency Intelligience report that contains the energy intensity value for EAF scrap steel production on page 39, Table 10. Below is the structure of this repository: 
 
 	A.	steel_carbon_emissions_analysis
 		a.	analysis
@@ -58,7 +58,6 @@ The data is not stored within the repo, but can be accessed through the links an
 		a.      technical_documentaion.docx
 	C.	references
 		a.	hasenbeigi_GEI_report.pdf
-		b.	swalec_GEM_report.pdf
 
 We recommend storing the input data in a directory one level above your project directory as shown:
 
