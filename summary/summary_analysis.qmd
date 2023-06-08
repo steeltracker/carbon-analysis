@@ -22,6 +22,7 @@ annual_data <- read_csv(here("..", "output_data", "2021_steel_plant_emissions_an
 
 Show the top 5 biggest emitting plants
 Show top 5 highest emissiosn intensity plants
+Show the average scope 1 v. scope 2 ratio for plant emissiosn of total
 
 ```{r}
 
@@ -68,7 +69,17 @@ top5_companies <- annual_data %>%
 
 ### Summary by Region
 
--   Emissions intensities by region
+-   Emissions intensities by region 
+- emissions by region
+
+```{r regions}
+
+regional_emissions <- annual_data %>% 
+  group_by(region)
+
+
+```
+
 
 ### Conclusion:
 
