@@ -59,6 +59,16 @@ The data is not stored within the repo, but can be accessed through the links an
 	C.	references
 		a.	hasenbeigi_GEI_report.pdf
 		b.	swalec_GEM_report.pdf
+
+We recommend storing the input data in a directory one level above your project directory as shown:
+
+Data
+	i. aisi_2021_util_rate.xlsx
+	ii. gem_2022_plant_info.xlsx
+	iii. egrid_2021_emissions_intensity.xlsx
+	iv. flight_2021_scope1_emissions.xls
+	v. egrid_2020_subregions
+		a.egrid_2020_subregions.shp
 	
 #### 4. The interactive map is hosted on the Tableau server and can be found here.
 
