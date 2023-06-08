@@ -461,41 +461,46 @@ The output data below will be saved one level above the project directory. You c
 ### Weekly scope 1 and 2 co2e wide
 
 ```{r, include=FALSE}
-write_csv(weekly_scope_1_and_2_wide, here("..", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
+write_csv(weekly_scope_1_and_2_wide, here("..", "output-data", "weekly_scope1_scope2_steel_plant_emissions_2021.csv"))
 ```
 
 ### Weekly scope 1 and 2 co2e long
 
 ```{r, include=FALSE}
-write_csv(weekly_scope_1_and_2_long, here("..", "weekly_scope1_scope2_steel_plant_emissions_2021_long.csv"))
+write_csv(weekly_scope_1_and_2_long, here("..", "output-data", "weekly_scope1_scope2_steel_plant_emissions_2021_long.csv"))
 ```
 
 ### Weekly scope 2 co2e wide
 
 ```{r, include=FALSE}
-write_csv(weekly_scope2_plant_emissions_wide, here("..", "weekly_scope2_plant_emissions_2021.csv"))
+write_csv(weekly_scope2_plant_emissions_wide, here("..", "output-data", "weekly_scope2_plant_emissions_2021.csv"))
 ```
 
 ### Weekly scope 2 co2e long
 
 ```{r, include=FALSE}
-write_csv(weekly_scope2_plant_emissions_long, here("..", "weekly_scope2_plant_emissions_2021_long.csv"))
+write_csv(weekly_scope2_plant_emissions_long, here("..", "output-data", "weekly_scope2_plant_emissions_2021_long.csv"))
 ```
 
 ### Total annual productions and scope 1 and 2 co2e emissions
 
 ```{r, include=FALSE}
-write_csv(total_steel_plant_emissions_and_productions_2021, here("..", "2021_steel_plant_emissions_and_productions.csv"))
+write_csv(total_steel_plant_emissions_and_productions_2021, here("..", "output-data", "2021_steel_plant_emissions_and_productions.csv"))
 ```
 
 ### Weekly steel plant productions wide
 
 ```{r}
-write_csv(plant_productions_wide, here("..", "weekly_steel_production.csv"))
+write_csv(plant_productions_wide, here("..", "output-data", "weekly_steel_production.csv"))
 ```
 
 ### Weekly steel plant productions long
 
 ```{r}
-write_csv(plant_productions_long, here("..", "weekly_steel_production_long.csv"))
+write_csv(plant_productions_long, here("..", "output-data", "weekly_steel_production_long.csv"))
 ```
+
+```{r}
+
+```
+
