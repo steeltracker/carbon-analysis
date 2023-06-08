@@ -47,17 +47,16 @@ Approximately 70% of steel produced in the US is from electrified steel plants w
 #### 3. The repository offers the same information through both R and Python analyses, providing users with the flexibility to choose the language they are most comfortable using. You can run all the code to acquire the tables and visualizations created in the respective programming languages. 
 The data is not stored within the repo, but can be accessed through the links and contacts listed above. The analysis folder has the R markdown and Python Notebook for calculating the Scope 2 emissiosn and emissions intensity. The summary folder contains a document summarizing some of the findings from these calculations. The output data is not stored in this repo, but it can also be requested from caitlin.swalec@globalenergymonitor.org. The deliverables folder contains the technical documentation of the project. The references folder includes the citations saved as pdfs. The references folder contains the Global Efficiency Intelligience report that contains the energy intensity value for EAF scrap steel production on page 39, Table 10. Below is the structure of this repository: 
 
-	A.	analysis
-		a. steel_co2e_2021_analysis.R
-		b. steel_co2e_2021_analysis.ipynb
-	B.	summary
-		a. summary_analysis.qmd
-		b. summary_analysis.pdf
-	B.	deliverables
-		a.      technical_documentaion.docx
-	C.	references
-		a.	hasenbeigi_GEI_report.pdf
-	D. 	README.md
+	A.	steel_co2e_2021_analysis.R
+	B. 	steel_co2e_2021_analysis.ipynb
+	C.	summary
+			i. summary_analysis.qmd
+			ii. summary_analysis.pdf
+	D.	deliverables
+			i. technical_documentaion.docx
+	E.	references
+			i. hasenbeigi_GEI_report.pdf
+	F. 	README.md
 
 We recommend storing the input data in a directory one level above your project directory as shown:
 
