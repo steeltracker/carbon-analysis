@@ -7,11 +7,12 @@ author: "Amrit Sandhu, Erica Bishop, Michael Zargari, and Ruth Enriquez"
 ### Loading Libraries
 
 ```{r, message=FALSE}
-library(sf)
-library(here)
-library(janitor)
+## Loading libraries
+library(sf) ## eGrid region work
+library(here) ## Easy filepaths
+library(janitor) ## Cleaning column names
 library(tidyverse) ## dplyr, readr, stringr, tidyr, ggplot2
-library(rmapshaper)
+library(rmapshaper) ## eGrid region work
 ```
 
 ### Importing eGrid Data
@@ -31,6 +32,7 @@ egrid2021_data <- egrid2021_data[-1,]
 
 ```{r}
 ## Cleaning egrid data for usability
+## Filtering out non-continental US subregions
 emissions_by_subregion <- egrid2021_data %>%
   mutate(co2e_lbs_per_mwh = as.numeric (e_grid_subregion_annual_co2_equivalent_combustion_output_emission_rate_lb_m_wh)
          , subregion = e_grid_subregion_acronym
@@ -53,6 +55,9 @@ gem_data_readin <- readxl::read_excel(here("..", "data", "GEM_2022_data.xlsx"), 
 
 ```{r}
 ## eaf_capacity is in thousand tonnes per year and we are standardizing to tonnes
+## Only looking at operating steel plants in the US
+## SUS00009 is not currently operating their EAF
+## SUS00061 has gone on strike for a long time so they are no longer operating
 gem_data_cleaned <- gem_data_readin %>% 
   filter(country == "United States"
          , status == "operating"
@@ -113,6 +118,7 @@ plant_points <- st_geometry(st_as_sf(gem_data, coords = c("lon", "lat"))) %>%
 #   tm_shape(plant_points) +
 #   tm_dots()
 
+## Finding which points overlap with which subregions
 overlap <- st_within(plant_points, subregion_shapes)
 
 ## Going through plant_points and get the numeric value that is outputted and store that indexed value into subregion_vector()
@@ -121,7 +127,7 @@ for (i in seq_along(overlap)) {
   subregion_vector[i] <- subregion_shapes$zip_subregi[overlap[[i]]]
 }
 
-## Adding column
+## Adding the subregion column
 gem_data <- gem_data %>% 
   mutate(subregion = subregion_vector)
 
@@ -139,12 +145,11 @@ We will be using these utilization rates in order to estimate the amount of stee
 AISI_regions_readin <- readxl::read_excel(here("..", "data", "AISI_regions.xlsx"), sheet = "Regions by State") %>% 
   clean_names()
 
-# AISI_city_readin <- readxl::read_excel(here("data", "AISI_regions.xlsx"), sheet = "Region by City") %>% 
-#   clean_names()
-
 AISI_data_readin <- readxl::read_excel(here("..", "data", "AISI_data.xlsx"), sheet = "AISI Production Values") %>% 
   clean_names()
 ```
+
+Region Abbreviations:
 
 NE = Northeast
 
@@ -158,12 +163,14 @@ W = Western
 
 ### Filtering AISI data, renaming columns, and selecting the weekly data and utilization rates we need
 
-**Uilization is based on tonnage capability to produce raw steel for a sustained full order book.**
+**Utilization is based on tonnage capability to produce raw steel for a sustained full order book.**
 
 ```{r}
+## Filtering by "yes" to find plants that are in the data
 AISI_regions <- AISI_regions_readin %>% 
   filter(steel_plant_in_gspt == "yes")
 
+## Renaming columns for clarity and only looking at weeks before January 1, 2022
 AISI_data <- AISI_data_readin %>% 
   rename(week_end_date = week_end_date_1
          , NE_util = north_east_region_capacity_utilization
@@ -177,12 +184,13 @@ AISI_data <- AISI_data_readin %>%
          , MW_util
          , S_util
          , W_util) %>% 
-  filter(week_end_date < "2022-01-01") ## Missing January 2021 data but we filled it in ourselves
+  filter(week_end_date < "2022-01-01")
 ```
 
 ### Merging all of our data so far
 
 ```{r}
+## assigning eGrid regions to multi-listed cities
 regional_plant_emissions <- left_join(plant_emissions_by_subregion, AISI_regions, by = "state") %>% 
   select(-c(steel_plant_in_gspt
             , state_abbreviation)) %>% 
@@ -272,6 +280,7 @@ zipcode_extraction <- yearly_scope2 %>%
          , zip_code = coalesce(zip_code_part2, zip_code_part3, zip_code_part4)) %>%
   select(-c(zip_code_part2, zip_code_part3, zip_code_part4))
 
+## Finding which zip codes only occur once and extracting those
 checking_unique_zipcodes_scope2 <- zipcode_extraction %>% 
   group_by(zip_code) %>% 
   summarise(count = n()) %>% 
@@ -280,6 +289,7 @@ checking_unique_zipcodes_scope2 <- zipcode_extraction %>%
   ungroup() %>% 
   select(zip_code)
 
+## Combining these zip codes back to the original data in order to only merge based off of the unique zip codes we found
 unique_scope2_zipcodes <- checking_unique_zipcodes_scope2 %>% 
   left_join(zipcode_extraction, by = "zip_code")
 ```
@@ -289,15 +299,18 @@ unique_scope2_zipcodes <- checking_unique_zipcodes_scope2 %>%
 The Greenhouse Gas Emissions data we are using includes emissions data of co2 equivalences from steel plants in the United States. We assume that this data is scope 1 and does not include any scope 2 sources. This data includes steel plant names, companies, locations, and emissions data.
 
 ```{r}
+## Reading in the the GHG Flight data
 scope1_readin <- readxl::read_excel(here("..", "data", "GHG_flight_scope1.xls"), skip = 5, na = c("", 0)) %>% 
   clean_names()
 
+## Extracting columns we are interested in
 scope1 <- scope1_readin %>% 
   select(c(zip_code
            , ghg_quantity_metric_tons_co2e
            , ghgrp_id)) %>% 
   drop_na()
 
+## Finding which zip codes only occur once and extracting those
 checking_unique_zipcodes_scope1 <- scope1 %>% 
   group_by(zip_code) %>% 
   summarise(count = n()) %>% 
@@ -305,6 +318,7 @@ checking_unique_zipcodes_scope1 <- scope1 %>%
   ungroup() %>% 
   select(zip_code)
 
+## Combining these zip codes back to the original data in order to only merge based off of the unique zip codes we found
 unique_scope1_zipcodes <- checking_unique_zipcodes_scope1 %>% 
   left_join(scope1, by = "zip_code")
 ```
@@ -395,7 +409,7 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
            , values_from = total_weekly_co2e_tonnes)
 ```
 
-### Finding the amount of steel produced weekly and annually (_long and _wide denote datasets with weekly values)
+### Finding the amount of steel produced weekly and annually (\_long and \_wide denote datasets with weekly values)
 
 ```{r}
 ### Weekly plant productions long
