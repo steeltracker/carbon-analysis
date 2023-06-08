@@ -324,6 +324,7 @@ scope_1_and_2_zipcode_matches <- unique_scope1_zipcodes %>%
 ### Anti-Joining to find remaining zip codes that had not matched and manually matching them
 
 ```{r}
+## Finding the zip codes that we have not matched yet
 remaining_zipcodes <-  zipcode_extraction %>% 
   anti_join(scope_1_and_2_zipcode_matches, by = "zip_code")
 
@@ -397,7 +398,7 @@ weekly_scope_1_and_2_wide <- weekly_scope_1_and_2_long %>%
 ### Finding the amount of steel produced weekly and annually (_long and _wide denote datasets with weekly values)
 
 ```{r}
-### Weekly -----
+### Weekly plant productions long
 plant_productions_long <- scope2_plant_emissions_long %>% 
   mutate(tonnes_of_steel_produced = utilization * max_tonnes_of_steel_producible_weekly) %>% 
   select(-scope2_co2e_tonnes_per_week)
@@ -413,8 +414,7 @@ plant_productions_wide <- plant_productions_long_rounded %>%
            , values_from = tonnes_of_steel_produced)
 
 
-### 2021 Year ----
-## Amount of steel produced in 2021
+## Amount of steel produced in 2021 year
 plant_productions_2021 <- plant_productions_long_rounded %>% 
   select(-c(week_end_date, utilization)) %>% 
   group_by_at(vars(-tonnes_of_steel_produced)) %>% 
