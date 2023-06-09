@@ -1,10 +1,12 @@
 ---
 title: "Summary of Scope 1 and 2 Emissions from EAF Steel Plants, 2021"
 author: "Ruth Enriquez, Erica Bishop, Michael Zargari, and Amrit Sandhu"
-format: pdf
+format: html
 ---
 
-```{r loading_packages}
+This document summarizes the key trends and findings from the Annual 2021 emissions calculated for each Electric Arc Furnace Steel Plant in the US. 
+
+```{r loading_packages, warning=FALSE, echo=FALSE, message=FALSE}
 ## Loading libraries
 library(sf) ## eGrid region work
 library(here) ## Easy filepaths
@@ -17,193 +19,52 @@ library(gt)
 library(ggpubr)
 ```
 
-```{r read in output data}
-scope_1_and_2_emissions_2021 <- read_csv(here("..", "output-data", "2021_steel_plant_emissions_and_productions.csv"))
+```{r read in output data, echo=FALSE, warning=FALSE, message=FALSE}
+
+scope_1_and_2_emissions_2021 <- read_csv(here("..", "output_data", "2021_steel_plant_emissions_and_productions.csv"))
+
 ```
 
-## Data Analysis
+### Summary by Plant: The Top 5 Highest Emitting Plants
 
-Show top 5 highest emissions intensity plants 
-
-Show the average scope 1 v. scope 2 ratio for plant emissions of total
-
-### Summary by Plant: Show the top 5 biggest emitting plants
-
-```{r}
+```{r echo=FALSE, warning=FALSE}
 #top 5 highest emitting plants by total emissions
 top_emitting_plants <- scope_1_and_2_emissions_2021 %>% 
   group_by(plant_name) %>% 
   summarise(total_co2e_2021 = sum(total_co2e_tonnes_2021)) %>% 
   top_n(5)
 
-top_emitting_plants
-```
+#rename columns for clarity
+colnames <- c(
+ plant_name = "Plant Name",
+  total_co2e_tonnes_2021 = "Total CO2E Emissions"
+)
 
-### Summary by Company: Show the top 5 biggest emitting parent companies
-
-```{r}
-## Top 5 highest emitting parent companies by total emissions
-top_emitting_companies <- scope_1_and_2_emissions_2021 %>% 
-  group_by(owner) %>% 
-  summarise(total_co2e_2021 = sum(total_co2e_tonnes_2021)) %>% 
-  top_n(5)
-
-top_emitting_companies
-```
-
-### Summary by Company: Show the top 5 biggest emitting parent companies
-
-```{r}
-## Top 5 highest emitting parent companies by total emissions
-top_emitting_companies <- scope_1_and_2_emissions_2021 %>% 
-  group_by(owner) %>% 
-  summarise(total_co2e_2021 = sum(total_co2e_tonnes_2021)) %>% 
-  top_n(5)
-
-top_emitting_companies
-```
-
-### Summary by Company: Show the 5 least emitting parent companies
-```{r}
-## 5 least emitting parent companies by total emissions
-least_emitting_companies <- scope_1_and_2_emissions_2021 %>% 
-  group_by(owner) %>% 
-  summarise(total_co2e_2021 = sum(total_co2e_tonnes_2021))  %>% 
-  arrange(desc(total_co2e_2021)) %>% 
-  tail(5)
-
-least_emitting_companies
-```
-
-### Summary by Company: Show the top 5 most emissions intense parent companies
-
-```{r}
-## Top 5 highest emitting parent companies by total emissions
-top_emissions_intense_companies <- scope_1_and_2_emissions_2021 %>% 
-  group_by(owner) %>% 
-  summarise(avg_emissions_intensity_co2e_tonne_per_tonne = mean(emissions_intensity_co2e_tonne_per_tonne)) %>% 
-  top_n(5)
-
-top_emissions_intense_companies
-```
-
-### Summary by Company: Show the 5 least emissions intense parent companies
-```{r}
-## 5 least emitting parent companies by total emissions
-least_emissions_intense_companies <- scope_1_and_2_emissions_2021 %>% 
-  group_by(owner) %>% 
-  summarise(avg_emissions_intensity_co2e_tonne_per_tonne = mean(emissions_intensity_co2e_tonne_per_tonne))  %>% 
-  arrange(desc(avg_emissions_intensity_co2e_tonne_per_tonne)) %>% 
-  tail(5)
-
-least_emissions_intense_companies
-```
-
-### Plotting
-
-```{r}
-low_high_emissions_intensity_companies <- rbind(top_emissions_intense_companies, least_emissions_intense_companies) %>% 
-  mutate(owner = fct_reorder(owner, avg_emissions_intensity_co2e_tonne_per_tonne))
-
-my_palette <- colorRampPalette(c("#FFFF99", "#FF8C00"))(10)
-
-emissions_intensity_companies_plot <- ggplot(low_high_emissions_intensity_companies, aes(x = avg_emissions_intensity_co2e_tonne_per_tonne
-                                                                                    , y = owner
-                                                          #                          , fill = my_palette
-    )
-    ) +
-  geom_col(aes(fill = my_palette)) +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-ggplotly(emissions_intensity_companies_plot)
-```
-
-### Regional Analysis: Show total and average regional-level emissions
-
-```{r}
-total_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(region) %>% 
-  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
-  arrange(desc(total_emissions_co2e))
-
-total_regional_emissions  
-
-average_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(region) %>% 
-  summarise(avg_emissions_per_region_co2e = mean(total_co2e_tonnes_2021)) %>% 
-  arrange(desc(avg_emissions_per_region_co2e))
-
-average_regional_emissions
-```
-
-### Regional Analysis: Show average regional-level emissions intensity
-
-```{r}
-average_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(region) %>% 
-  summarise(avg_emissions_intensity_per_region_co2e = mean(emissions_intensity_co2e_tonne_per_tonne)) %>% 
-  arrange(desc(avg_emissions_intensity_per_region_co2e))
-
-average_regional_emissions
-```
-
-### State-Level Analysis: Show total and average state-level emissions
-
-```{r}
-total_state_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(state) %>% 
-  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
-  arrange(desc(total_emissions_co2e))
-
-total_state_emissions
+top_emitting_plants <- setNames(top_emitting_plants, colnames)
   
-average_state_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(state) %>% 
-  summarise(avg_emissions_per_plant_co2e = mean(total_co2e_tonnes_2021)) %>% 
-  arrange(desc(avg_emissions_per_plant_co2e))
+#display table
+# Print the updated table
+top_plants_table <- gt::gt(top_emitting_plants) %>% 
+  tab_header(
+  title = "Top 5 Highest Emitting EAF Steel Plants, 2021",
+  subtitle = "Based on Scope 1 and Scope 2 Emissions from EAF Plants (metric tons CO2e)"
+  ) %>% 
+  fmt_number(
+    columns = "Total CO2E Emissions",
+    use_seps = TRUE,
+    n_sigfig = 7
+  )
 
-average_state_emissions
+top_plants_table
+
+
+
 ```
 
-### Regional Analysis: Show average state-level emissions intensity
 
-```{r}
-average_state_emissions <- scope_1_and_2_emissions_2021 %>% 
-  group_by(state) %>% 
-  summarise(avg_emissions_intensity_per_region_co2e = mean(emissions_intensity_co2e_tonne_per_tonne)) %>% 
-  arrange(desc(avg_emissions_intensity_per_region_co2e))
+### Summary by Company: Top emitters by emissions and emissions intensity
 
-average_state_emissions
-```
-
-### Materials Analysis: Identify the popularity of semi-finished, finished rolled, or crude steel produced from our plants
-
-```{r}
-## Getting only the data we want and seperating the catergies of steel products into their own rows
-types_of_steel_produced <- scope_1_and_2_emissions_2021 %>% 
-  select(c(plant_id
-           , category_steel_product
-           , steel_products
-           , emissions_intensity_co2e_tonne_per_tonne
-           , total_co2e_tonnes_2021
-           , total_tonnes_steel_produced_2021
-           )) %>% 
-  separate_rows(category_steel_product, sep = "; ")
-
-## Summary table
-popularity_of_category_steel_products <- types_of_steel_produced %>% 
-  group_by(category_steel_product) %>% 
-  summarise(total_number = n())
-
-popularity_of_category_steel_products
-```
-
-### Summary by Company (eb section start)
-
--   Table of summary statistics: average and median Scope 1, Scope 2, and total emissions for each company
-
-```{r companies by total emissions}
+```{r companies by total emissions, echo=FALSE}
 
 # creating summary stats by company
 company_stats <- scope_1_and_2_emissions_2021 %>% 
@@ -249,7 +110,8 @@ company_table <- gt::gt(top5_annual_emitters) %>%
 company_table
 ```
 
-```{r companies by emissions intensity}
+
+```{r companies by emissions intensity, echo=FALSE}
 #summary table
 top5_intensity <- company_stats %>% 
   select(owner, co2_intensity_avg, total_emissions_avg) %>% 
@@ -280,17 +142,89 @@ company_intensity_table
 
 ```
 
-```{r emissions intensity v emissions}
+
+### Regional Analysis: Average and Total Emissions from Each AISI Region
+
+```{r echo=FALSE}
+#emissions by AISI regions
+regional_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(region) %>% 
+  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021),
+            avg_emissions_per_region_co2e = mean(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(total_emissions_co2e))
+
+#modify column names for clarity
+colnames <- c(
+      region = "Region",
+      total_emissions_co2e = "Annual Emissions (mt CO2e)",
+      total_emissions_avg = "Avg Total Emissions (mt CO2e)")
+
+regional_emissions <- setNames(regional_emissions, colnames)
+
+# Print the updated table
+regional_emissions_table <- gt::gt(regional_emissions) %>% 
+  tab_header(
+  title = "Regional Emissions from EAF Steel Production",
+  subtitle = "Based on 2021 Scope 1 and Scope 2 Emissions (metric tons CO2e)"
+  ) %>% 
+  fmt_number(
+    columns = c("Avg Total Emissions (mt CO2e)", "Annual Emissions (mt CO2e)"),
+    use_seps = TRUE,
+    n_sigfig = 7
+  )
+
+regional_emissions_table
 
 
-#make a plot that shows the info in table again
+```
 
 
-#make a plot that shows emissions intensity
+```{r regional_emissions_intensity, echo=FALSE}
+average_regional_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(region) %>% 
+  summarise(avg_emissions_intensity_per_region_co2e = mean(emissions_intensity_co2e_tonne_per_tonne),
+            avg_emissions_per_region = mean(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(avg_emissions_intensity_per_region_co2e))
 
-#stitch the plots together
+
+ggplot(data = average_regional_emissions,
+       aes(x = region,
+           y = avg_emissions_intensity_per_region_co2e)) +
+  geom_col(width = 0.5,
+           fill = "#f5de98") +
+  labs (
+    title = "Average Emissions Intensity by Region",
+    x = "Region",
+    y = "Average Emissions Intensity (mt CO2e/mt steel"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 
 
+```
+
+### State-Level Analysis: Average and total state level emissions 
+
+```{r echo=FALSE}
+total_state_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(state) %>% 
+  summarise(total_emissions_co2e = sum(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(total_emissions_co2e))
+
+total_state_emissions %>% 
+  head(10) %>% 
+  gt()
+  
+average_state_emissions <- scope_1_and_2_emissions_2021 %>% 
+  group_by(state) %>% 
+  summarise(avg_emissions_per_plant_co2e = mean(total_co2e_tonnes_2021)) %>% 
+  arrange(desc(avg_emissions_per_plant_co2e))
+
+average_state_emissions %>% 
+  head(10) %>% 
+  gt()
 ```
 
 ### Benchmarking Calculations with Corporate Sustainability Reports
@@ -311,7 +245,7 @@ While many of our calculations are in the same ball park, its important to stres
 
 It was reassuring to the project team that our methods lead to results similar to industry reported numbers, but there is still a ways to go for full data transparency in the industry.
 
-```{r create benchmakring df}
+```{r create benchmakring df, echo=FALSE}
 
 # Create the tibble from the data
 benchmark_df <- tibble(
@@ -323,7 +257,7 @@ benchmark_df <- tibble(
 
 ```
 
-```{r plot benchmark}
+```{r plot benchmark, echo=FALSE}
 #set plot colors
 tab_colors <- c("calculated" = "#f5de98", "reported" = "#ce6716")
 
@@ -352,6 +286,3 @@ benchmark_plot
 
 ```
 
-### Conclusion:
-
-Call for data transparency for the steel industry and beyond. Electrification doesn't equal decarbonization - we need the data to prove it.
