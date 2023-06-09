@@ -51,7 +51,7 @@ The data is not stored within the repo, but can be accessed through the links an
 	B. 	steel_co2e_2021_analysis.ipynb
 	C.	summary
 			i. summary_analysis.qmd
-			ii. summary_analysis.pdf
+			ii. summary_analysis.html
 	D.	deliverables
 			i. technical_documentaion.docx
 	E.	references
